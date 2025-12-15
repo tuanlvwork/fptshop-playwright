@@ -32,11 +32,14 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       shardTotal: ${{ steps.set-matrix.outputs.shardTotal }}
+      parallelWorkers: ${{ steps.set-matrix.outputs.parallelWorkers }}
     steps:
       - id: set-matrix
         run: |
           count=${{ inputs.shardTotal }}
+          workers=${{ inputs.parallelWorkers }}
           echo "shardTotal=$count" >> $GITHUB_OUTPUT
+          echo "parallelWorkers=$workers" >> $GITHUB_OUTPUT
           matrix="["
           for ((i=1; i<=count; i++)); do
             matrix="${matrix}${i}"
@@ -55,7 +58,7 @@ jobs:
       fail-fast: false
       matrix:
         shardIndex: ${{ fromJson(needs.setup.outputs.matrix) }}
-        shardTotal: [ ${{ needs.setup.outputs.shardTotal }} ]
+        shardTotal: [ "${{ needs.setup.outputs.shardTotal }}" ]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -81,7 +84,10 @@ jobs:
 
     - name: Get Playwright Version
       id: playwright-version
-      run: echo "VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+      shell: bash
+      run: |
+        VERSION=$(npx playwright --version | awk '{print $2}')
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Cache Playwright browsers
       uses: actions/cache@v4
@@ -106,7 +112,7 @@ jobs:
         if [ "${{ github.event.inputs.tags }}" != "all" ] && [ -n "${{ github.event.inputs.tags }}" ]; then
           TAGS_ARG="--tags '${{ github.event.inputs.tags }}'"
         fi
-        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ inputs.parallelWorkers }} $TAGS_ARG
+        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG
 
     - name: Upload shard report
       uses: actions/upload-artifact@v4
@@ -147,7 +153,10 @@ jobs:
 
     - name: Get Playwright Version
       id: playwright-version
-      run: echo "VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+      shell: bash
+      run: |
+        VERSION=$(npx playwright --version | awk '{print $2}')
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
