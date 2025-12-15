@@ -1,8 +1,15 @@
+const common = {
+    requireModule: ['ts-node/register'],
+    require: ['src/steps/*.ts', 'src/support/*.ts'],
+};
+
 module.exports = {
     default: {
-        requireModule: ['ts-node/register'],
-        require: ['src/steps/*.ts', 'src/support/*.ts'],
+        ...common,
         format: ['progress-bar', 'html:cucumber-report.html'],
         paths: ['features/*.feature'],
+    },
+    shard: {
+        ...common,
     }
 }

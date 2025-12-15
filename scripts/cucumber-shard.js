@@ -43,9 +43,7 @@ const tagsArg = args.find(arg => arg.startsWith('--tags'));
 
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
-    '--require', 'src/steps/*.ts',
-    '--require', 'src/support/*.ts',
-    '--require-module', 'ts-node/register',
+    '--profile', 'shard',
     '--format', 'progress', // Use progress instead of progress-bar for CI
     '--format', `html:${reportFileHtml}`,
     '--format', `json:${reportFileJson}`
