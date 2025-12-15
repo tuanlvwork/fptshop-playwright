@@ -1,4 +1,4 @@
-import { Before, After, BeforeAll, AfterAll, setDefaultTimeout } from '@cucumber/cucumber';
+import { Before, After, BeforeAll, AfterAll, setDefaultTimeout, Status } from '@cucumber/cucumber';
 import { chromium, Browser } from '@playwright/test';
 import { CustomWorld } from './world';
 
@@ -21,7 +21,11 @@ Before(async function (this: CustomWorld) {
     this.page = await this.context.newPage();
 });
 
-After(async function (this: CustomWorld) {
+After(async function (this: CustomWorld, scenario) {
+    if (scenario.result?.status === Status.FAILED) {
+        const screenshot = await this.page.screenshot({ fullPage: true, type: 'jpeg', quality: 80 });
+        this.attach(screenshot, 'image/jpeg');
+    }
     await this.page.close();
     await this.context.close();
 });

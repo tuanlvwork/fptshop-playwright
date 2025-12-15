@@ -39,6 +39,27 @@ const mergedJsonPath = path.join(outputDir, 'merged-report.json');
 fs.writeFileSync(mergedJsonPath, JSON.stringify(mergedResults, null, 2));
 console.log(`Merged JSON written to ${mergedJsonPath}`);
 
+// Calculate and log summary
+let passed = 0;
+let failed = 0;
+mergedResults.forEach(feature => {
+    if (feature.elements) {
+        feature.elements.forEach(scenario => {
+            const isFailed = scenario.steps.some(step => step.result.status === 'failed');
+            if (isFailed) failed++;
+            else passed++;
+        });
+    }
+});
+
+console.log('==============================');
+console.log('       TEST EXECUTION SUMMARY       ');
+console.log('==============================');
+console.log(`Total Scenarios: ${passed + failed}`);
+console.log(`Passed: ${passed}`);
+console.log(`Failed: ${failed}`);
+console.log('==============================');
+
 // 3. Generate HTML Report
 const options = {
     theme: 'bootstrap',
@@ -54,7 +75,8 @@ const options = {
         "Platform": process.platform,
         "Parallel": "Scenarios",
         "Executed": "Remote"
-    }
+    },
+    failedSummaryReport: true,
 };
 
 reporter.generate(options);
