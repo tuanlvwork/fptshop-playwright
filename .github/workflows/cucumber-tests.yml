@@ -51,7 +51,11 @@ jobs:
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps
+    - name: Install Playwright Dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps
     - name: Run Cucumber tests
       run: |
         TAGS_ARG=""
@@ -100,8 +104,22 @@ jobs:
     - name: Merge reports
       run: node scripts/merge-cucumber-reports.js
 
+    - name: Cache Playwright Chromium
+      uses: actions/cache@v4
+      id: playwright-chromium-cache
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-playwright-chromium-
+
     - name: Install Playwright Chromium
+      if: steps.playwright-chromium-cache.outputs.cache-hit != 'true'
       run: npx playwright install --with-deps chromium
+
+    - name: Install Playwright Dependencies
+      if: steps.playwright-chromium-cache.outputs.cache-hit == 'true'
+      run: npx playwright install-deps chromium
 
     - name: Capture Report Screenshot
       run: node scripts/capture-report-screenshot.js
