@@ -80,8 +80,8 @@ AfterStep(async function (this: CustomWorld, { result, pickle, pickleStep }) {
         }
 
         // Capture screenshot at failure point
-        const screenshot = await this.page.screenshot({ fullPage: false, type: 'jpeg', quality: 80 });
-        this.attach(screenshot, 'image/jpeg');
+        const screenshot = await this.page.screenshot({ fullPage: false, type: 'png' });
+        this.attach(screenshot, 'image/png');
     }
 });
 
@@ -99,8 +99,8 @@ After(async function (this: CustomWorld, scenario) {
         this.attach(`🔍 Trace saved to: ${tracePath}\nOpen with: npx playwright show-trace ${tracePath}`, 'text/plain');
 
         // Capture full page screenshot
-        const screenshot = await this.page.screenshot({ fullPage: true, type: 'jpeg', quality: 80 });
-        this.attach(screenshot, 'image/jpeg');
+        const screenshot = await this.page.screenshot({ fullPage: true, type: 'png' });
+        this.attach(screenshot, 'image/png');
 
         // Attach test summary
         const summary = `

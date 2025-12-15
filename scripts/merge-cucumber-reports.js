@@ -114,7 +114,9 @@ const options = {
         "Parallel": "Scenarios",
         "Executed": "Remote"
     },
-    failedSummaryReport: true,
+    failedSummaryReport: false,
+    storeScreenshots: true,
+    noInlineScreenshots: false,
 };
 
 reporter.generate(options);
