@@ -6,7 +6,9 @@
   "scripts": {
     "test": "playwright test",
     "test:cucumber": "cucumber-js",
-    "test:cucumber:shard": "node scripts/cucumber-shard.js"
+    "test:cucumber:shard": "node scripts/cucumber-shard.js",
+    "trace:list": "node scripts/list-traces.js",
+    "trace:show": "node scripts/show-trace.js"
   },
   "keywords": [],
   "author": "",

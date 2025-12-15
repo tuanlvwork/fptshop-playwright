@@ -114,6 +114,14 @@ jobs:
         fi
         npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG
 
+    - name: Upload trace files
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: traces-${{ matrix.shardIndex }}
+        path: traces/
+        retention-days: 7
+
     - name: Upload shard report
       uses: actions/upload-artifact@v4
       if: always()

@@ -10,6 +10,7 @@ thumbs.db
 # Cucumber
 cucumber-report/
 all-cucumber-reports/
+traces/
 dist/
 # Ignore root level reports but keep source files
 /*.json

@@ -60,6 +60,44 @@ console.log(`Passed: ${passed}`);
 console.log(`Failed: ${failed}`);
 console.log('==============================');
 
+// Detailed failure report
+if (failed > 0) {
+    console.log('\n🔴 FAILED SCENARIOS DETAILS:');
+    console.log('==============================\n');
+
+    mergedResults.forEach(feature => {
+        if (feature.elements) {
+            feature.elements.forEach(scenario => {
+                const failedSteps = scenario.steps.filter(step => step.result.status === 'failed');
+                if (failedSteps.length > 0) {
+                    console.log(`\n📋 Feature: ${feature.name}`);
+                    console.log(`   Scenario: ${scenario.name}`);
+
+                    failedSteps.forEach((step, index) => {
+                        console.log(`\n   ❌ Failed Step ${index + 1}: ${step.name}`);
+
+                        if (step.result.error_message) {
+                            console.log(`   💥 Error: ${step.result.error_message.split('\n')[0]}`);
+                        }
+
+                        if (step.result.duration) {
+                            console.log(`   ⏱️  Duration: ${(step.result.duration / 1000000).toFixed(2)}ms`);
+                        }
+
+                        if (step.embeddings && step.embeddings.length > 0) {
+                            const textAttachments = step.embeddings.filter(e => e.mime_type === 'text/plain').length;
+                            const imageAttachments = step.embeddings.filter(e => e.mime_type.startsWith('image')).length;
+                            console.log(`   📎 Attachments: ${textAttachments} text, ${imageAttachments} screenshots`);
+                        }
+                    });
+                    console.log('\n   ' + '─'.repeat(60));
+                }
+            });
+        }
+    });
+    console.log('\n==============================\n');
+}
+
 // 3. Generate HTML Report
 const options = {
     theme: 'bootstrap',
