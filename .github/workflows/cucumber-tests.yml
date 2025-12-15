@@ -31,10 +31,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      shardTotal: ${{ steps.set-matrix.outputs.shardTotal }}
     steps:
       - id: set-matrix
         run: |
           count=${{ inputs.shardTotal }}
+          echo "shardTotal=$count" >> $GITHUB_OUTPUT
           matrix="["
           for ((i=1; i<=count; i++)); do
             matrix="${matrix}${i}"
@@ -53,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         shardIndex: ${{ fromJson(needs.setup.outputs.matrix) }}
-        shardTotal: [ ${{ inputs.shardTotal }} ]
+        shardTotal: [ ${{ needs.setup.outputs.shardTotal }} ]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -77,12 +79,16 @@ jobs:
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
 
+    - name: Get Playwright Version
+      id: playwright-version
+      run: echo "VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+
     - name: Cache Playwright browsers
       uses: actions/cache@v4
       id: playwright-cache
       with:
         path: ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.VERSION }}
         restore-keys: |
           ${{ runner.os }}-playwright-
 
@@ -139,6 +145,10 @@ jobs:
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
 
+    - name: Get Playwright Version
+      id: playwright-version
+      run: echo "VERSION=$(npx playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
@@ -154,7 +164,7 @@ jobs:
       id: playwright-chromium-cache
       with:
         path: ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-chromium-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-playwright-chromium-${{ steps.playwright-version.outputs.VERSION }}
         restore-keys: |
           ${{ runner.os }}-playwright-chromium-
 
