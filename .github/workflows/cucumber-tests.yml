@@ -15,16 +15,45 @@ on:
           - '@search'
           - '@detail'
           - '@combination'
+      shardTotal:
+        description: 'Total number of shards'
+        required: true
+        default: '4'
+        type: string
+      parallelWorkers:
+        description: 'Number of parallel workers per shard'
+        required: true
+        default: '4'
+        type: string
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          count=${{ inputs.shardTotal }}
+          matrix="["
+          for ((i=1; i<=count; i++)); do
+            matrix="${matrix}${i}"
+            if [ $i -lt $count ]; then
+              matrix="${matrix}, "
+            fi
+          done
+          matrix="${matrix}]"
+          echo "matrix=${matrix}" >> $GITHUB_OUTPUT
+
   test:
+    needs: setup
     timeout-minutes: 60
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2, 3, 4]
-        shardTotal: [4]
+        shardIndex: ${{ fromJson(needs.setup.outputs.matrix) }}
+        shardTotal: [ ${{ inputs.shardTotal }} ]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -71,7 +100,7 @@ jobs:
         if [ "${{ github.event.inputs.tags }}" != "all" ] && [ -n "${{ github.event.inputs.tags }}" ]; then
           TAGS_ARG="--tags '${{ github.event.inputs.tags }}'"
         fi
-        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} $TAGS_ARG
+        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ inputs.parallelWorkers }} $TAGS_ARG
 
     - name: Upload shard report
       uses: actions/upload-artifact@v4

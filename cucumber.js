@@ -6,6 +6,7 @@ const common = {
 module.exports = {
     default: {
         ...common,
+        parallel: 4,
         format: ['progress-bar', 'html:cucumber-report.html'],
         paths: ['features/*.feature'],
     },

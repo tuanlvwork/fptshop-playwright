@@ -40,6 +40,7 @@ const reportFileHtml = `cucumber-report-${shardIndex}.html`;
 const reportFileJson = `cucumber-report-${shardIndex}.json`;
 
 const tagsArg = args.find(arg => arg.startsWith('--tags'));
+const parallelArg = args.find(arg => arg.startsWith('--parallel='));
 
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
@@ -69,6 +70,11 @@ if (tagsArg) {
             cucumberArgs.push(directTags);
         }
     }
+}
+
+if (parallelArg) {
+    const workers = parallelArg.split('=')[1];
+    cucumberArgs.push('--parallel', workers);
 }
 
 const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
