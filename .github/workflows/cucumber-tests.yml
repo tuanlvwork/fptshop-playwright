@@ -13,12 +13,12 @@ on:
         default: 'all'
         type: choice
         options:
-        - all
-        - @brand
-        - @price
-        - @search
-        - @detail
-        - @combination
+          - all
+          - '@brand'
+          - '@price'
+          - '@search'
+          - '@detail'
+          - '@combination'
 
 jobs:
   test:
