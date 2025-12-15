@@ -100,8 +100,20 @@ jobs:
     - name: Merge reports
       run: node scripts/merge-cucumber-reports.js
 
+    - name: Install Playwright Chromium
+      run: npx playwright install --with-deps chromium
+
+    - name: Capture Report Screenshot
+      run: node scripts/capture-report-screenshot.js
+
     - uses: actions/upload-artifact@v4
       with:
         name: cucumber-html-report
         path: cucumber-report
+        retention-days: 30
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cucumber-report-summary
+        path: cucumber-report/cucumber-report-summary.png
         retention-days: 30

@@ -25,12 +25,7 @@ const allFiles = fs.readdirSync(featuresDir)
     .sort() // Deterministic order
     .map(file => path.join('features', file));
 
-const totalFiles = allFiles.length;
-const chunkSize = Math.ceil(totalFiles / shardTotal);
-const start = (shardIndex - 1) * chunkSize;
-const end = Math.min(start + chunkSize, totalFiles);
-
-const filesToRun = allFiles.slice(start, end);
+const filesToRun = allFiles.filter((_, index) => (index % shardTotal) + 1 === shardIndex);
 
 if (filesToRun.length === 0) {
     console.log(`Shard ${shardIndex}/${shardTotal}: No files to run.`);
