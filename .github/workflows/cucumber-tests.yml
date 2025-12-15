@@ -1,10 +1,24 @@
-name: Playwright Tests
+name: Cucumber Tests
 
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: 'Select a tag to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - @brand
+        - @price
+        - @search
+        - @detail
+        - @combination
 
 jobs:
   test:
@@ -42,13 +56,20 @@ jobs:
       run: npm ci
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+    - name: Run Cucumber tests
+      run: |
+        TAGS_ARG=""
+        if [ "${{ github.event.inputs.tags }}" != "all" ] && [ -n "${{ github.event.inputs.tags }}" ]; then
+          TAGS_ARG="--tags '${{ github.event.inputs.tags }}'"
+        fi
+        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} $TAGS_ARG
     - uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: blob-report-${{ matrix.shardIndex }}
-        path: blob-report
+        name: cucumber-report-${{ matrix.shardIndex }}
+        path: |
+          cucumber-report-${{ matrix.shardIndex }}.html
+          cucumber-report-${{ matrix.shardIndex }}.json
         retention-days: 1
 
   merge-reports:
@@ -76,20 +97,15 @@ jobs:
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
-        pattern: blob-report-*
+        pattern: cucumber-report-*
         merge-multiple: true
-        path: all-blob-reports
+        path: all-cucumber-reports
 
     - name: Merge reports
-      run: |
-        # This step assumes we are using blob reporter which is best for sharding
-        # But standard HTML reporter doesn't merge easily. 
-        # For proper sharding report merging, we should use the blob reporter.
-        # Let's update the config to use blob reporter as well.
-        npx playwright merge-reports --reporter html ./all-blob-reports 
+      run: node scripts/merge-cucumber-reports.js
 
     - uses: actions/upload-artifact@v4
       with:
-        name: html-report
-        path: playwright-report
+        name: cucumber-html-report
+        path: cucumber-report
         retention-days: 30

@@ -4,14 +4,19 @@
   "description": "Automation testing for FPT Shop",
   "main": "index.js",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:cucumber": "cucumber-js",
+    "test:cucumber:shard": "node scripts/cucumber-shard.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@cucumber/cucumber": "^12.4.0",
     "@playwright/test": "^1.40.0",
     "@types/node": "^25.0.2",
+    "cucumber-html-reporter": "^7.2.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   }
 }

@@ -6,3 +6,15 @@ node_modules/
 .env
 .DS_Store
 thumbs.db
+
+# Cucumber
+cucumber-report/
+all-cucumber-reports/
+dist/
+# Ignore root level reports but keep source files
+/*.json
+/*.html
+!package.json
+!package-lock.json
+!cucumber.js
+!tsconfig.json
