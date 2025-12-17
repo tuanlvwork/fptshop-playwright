@@ -7,7 +7,11 @@ module.exports = {
     default: {
         ...common,
         parallel: 4,
-        format: ['progress-bar', 'html:cucumber-report.html'],
+        format: [
+            'progress-bar',
+            'html:cucumber-report.html',
+            'json:cucumber-report.json'
+        ],
         paths: ['features/*.feature'],
     },
     shard: {

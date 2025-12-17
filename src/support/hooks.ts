@@ -1,10 +1,11 @@
 import { Before, After, AfterStep, BeforeAll, AfterAll, setDefaultTimeout, Status } from '@cucumber/cucumber';
 import { chromium, Browser } from '@playwright/test';
 import { CustomWorld } from './world';
+import config from '../config/config';
 import * as fs from 'fs';
 import * as path from 'path';
 
-setDefaultTimeout(60 * 1000);
+setDefaultTimeout(config.defaultTimeout);
 
 let browser: Browser;
 
@@ -15,7 +16,9 @@ if (!fs.existsSync(tracesDir)) {
 }
 
 BeforeAll(async function () {
-    browser = await chromium.launch({ headless: true });
+    browser = await chromium.launch({
+        headless: config.headless
+    });
 });
 
 AfterAll(async function () {
@@ -26,16 +29,22 @@ Before(async function (this: CustomWorld) {
     this.testMetadata.startTime = Date.now();
 
     this.context = await browser.newContext({
-        baseURL: 'http://fptshop.com.vn',
+        baseURL: config.baseUrl,
+        viewport: {
+            width: config.viewportWidth,
+            height: config.viewportHeight
+        }
     });
     this.page = await this.context.newPage();
 
     // Start tracing for detailed debugging
-    await this.context.tracing.start({
-        screenshots: true,
-        snapshots: true,
-        sources: true
-    });
+    if (config.enableTracing) {
+        await this.context.tracing.start({
+            screenshots: true,
+            snapshots: true,
+            sources: true
+        });
+    }
 
     // Capture console logs
     this.page.on('console', (msg) => {
@@ -80,8 +89,13 @@ AfterStep(async function (this: CustomWorld, { result, pickle, pickleStep }) {
         }
 
         // Capture screenshot at failure point
-        const screenshot = await this.page.screenshot({ fullPage: false, type: 'png' });
-        this.attach(screenshot, 'image/png');
+        if (config.screenshotOnFailure) {
+            const screenshot = await this.page.screenshot({
+                fullPage: false,
+                type: config.screenshotType
+            });
+            this.attach(screenshot, `image/${config.screenshotType}`);
+        }
     }
 });
 
@@ -99,8 +113,13 @@ After(async function (this: CustomWorld, scenario) {
         this.attach(`🔍 Trace saved to: ${tracePath}\nOpen with: npx playwright show-trace ${tracePath}`, 'text/plain');
 
         // Capture full page screenshot
-        const screenshot = await this.page.screenshot({ fullPage: true, type: 'png' });
-        this.attach(screenshot, 'image/png');
+        if (config.screenshotOnFailure) {
+            const screenshot = await this.page.screenshot({
+                fullPage: config.fullPageScreenshot,
+                type: config.screenshotType
+            });
+            this.attach(screenshot, `image/${config.screenshotType}`);
+        }
 
         // Attach test summary
         const summary = `

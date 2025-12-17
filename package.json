@@ -5,10 +5,22 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
     "test:cucumber": "cucumber-js",
+    "test:cucumber:headed": "HEADLESS=false cucumber-js",
     "test:cucumber:shard": "node scripts/cucumber-shard.js",
+    "report:cucumber": "node scripts/generate-cucumber-report.js",
+    "report:playwright": "playwright show-report",
+    "report:open:cucumber": "open cucumber-report/index.html",
+    "report:open:playwright": "open playwright-report/index.html",
     "trace:list": "node scripts/list-traces.js",
-    "trace:show": "node scripts/show-trace.js"
+    "trace:show": "node scripts/show-trace.js",
+    "test:all": "npm run test:playwright && npm run test:cucumber",
+    "clean": "rm -rf test-results playwright-report blob-report cucumber-report all-cucumber-reports traces *.html *.json",
+    "clean:reports": "rm -rf playwright-report cucumber-report all-cucumber-reports",
+    "clean:traces": "rm -rf traces"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +30,7 @@
     "@playwright/test": "^1.40.0",
     "@types/node": "^25.0.2",
     "cucumber-html-reporter": "^7.2.0",
+    "dotenv": "^16.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   }
