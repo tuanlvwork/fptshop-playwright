@@ -1,5 +1,5 @@
 const common = {
-    requireModule: ['ts-node/register'],
+    requireModule: ['ts-node/register', 'tsconfig-paths/register'],
     require: ['src/steps/*.ts', 'src/support/*.ts'],
 };
 

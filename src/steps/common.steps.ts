@@ -1,6 +1,6 @@
 import { Given, Then } from '@cucumber/cucumber';
-import { CustomWorld } from '../support/world';
-import { HomePage } from '../pages/HomePage';
+import { CustomWorld } from '@support/world';
+import { HomePage } from '@pages/HomePage';
 import { expect } from '@playwright/test';
 
 Given('I am on the FPT Shop phone page', async function (this: CustomWorld) {
