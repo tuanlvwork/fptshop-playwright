@@ -94,14 +94,29 @@ jobs:
     if: always()
     needs: [test]
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Verify Playwright version sync
+      run: |
+        PACKAGE_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']" | sed 's/[\^~]//')
+        CONTAINER_VERSION=$(npx playwright --version | awk '{print $2}')
+        echo "📦 package.json: $PACKAGE_VERSION | 🐳 Container: $CONTAINER_VERSION"
+        if [ "$PACKAGE_VERSION" != "$CONTAINER_VERSION" ]; then
+          echo "❌ VERSION MISMATCH! Update Docker image to: v${PACKAGE_VERSION}-noble"
+          exit 1
+        fi
+        echo "✅ Versions match!"
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 20
         cache: 'npm'
+
     - name: Cache node_modules
       uses: actions/cache@v4
       id: node-modules-cache
@@ -110,9 +125,12 @@ jobs:
         key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-modules-
+
     - name: Install dependencies
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
+
+    # Note: Playwright browsers are pre-installed in Docker container
     
     - name: Download all artifacts
       uses: actions/download-artifact@v4
@@ -131,6 +149,7 @@ jobs:
         name: html-report
         path: playwright-report
         retention-days: 30
+
 
   allure-report:
     if: always()

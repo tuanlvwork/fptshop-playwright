@@ -168,9 +168,22 @@ jobs:
     if: always()
     needs: [test]
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Verify Playwright version sync
+      run: |
+        PACKAGE_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']" | sed 's/[\^~]//')
+        CONTAINER_VERSION=$(npx playwright --version | awk '{print $2}')
+        echo "📦 package.json: $PACKAGE_VERSION | 🐳 Container: $CONTAINER_VERSION"
+        if [ "$PACKAGE_VERSION" != "$CONTAINER_VERSION" ]; then
+          echo "❌ VERSION MISMATCH! Update Docker image to: v${PACKAGE_VERSION}-noble"
+          exit 1
+        fi
+        echo "✅ Versions match!"
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -191,12 +204,7 @@ jobs:
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
 
-    - name: Get Playwright Version
-      id: playwright-version
-      shell: bash
-      run: |
-        VERSION=$(npx playwright --version | awk '{print $2}')
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+    # Note: Playwright browsers are pre-installed in Docker container
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
@@ -207,23 +215,6 @@ jobs:
 
     - name: Merge reports
       run: node scripts/merge-cucumber-reports.js
-
-    - name: Cache Playwright Chromium
-      uses: actions/cache@v4
-      id: playwright-chromium-cache
-      with:
-        path: ~/.cache/ms-playwright
-        key: ${{ runner.os }}-playwright-chromium-${{ steps.playwright-version.outputs.VERSION }}
-        restore-keys: |
-          ${{ runner.os }}-playwright-chromium-
-
-    - name: Install Playwright Chromium
-      if: steps.playwright-chromium-cache.outputs.cache-hit != 'true'
-      run: npx playwright install --with-deps chromium
-
-    - name: Install Playwright Dependencies
-      if: steps.playwright-chromium-cache.outputs.cache-hit == 'true'
-      run: npx playwright install-deps chromium
 
     - name: Capture Report Screenshot
       run: node scripts/capture-report-screenshot.js
@@ -241,6 +232,7 @@ jobs:
         name: cucumber-report-summary
         path: cucumber-report/cucumber-report-summary.png
         retention-days: 30
+
 
   allure-report:
     if: always()
