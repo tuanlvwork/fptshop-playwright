@@ -1,4 +1,9 @@
 @search
+@allure.label.epic:E-commerce
+@allure.label.feature:Product_Search
+@allure.label.story:Search_by_Product_Name
+@allure.label.severity:blocker
+@allure.label.owner:QA_Team
 Feature: Product Search
   As a user
   I want to search for specific phones
@@ -31,3 +36,4 @@ Feature: Product Search
       | Nokia C32                |
       | Samsung Galaxy M34       |
       | iPhone 11                |
+

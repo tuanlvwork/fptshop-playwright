@@ -1,4 +1,9 @@
 @detail
+@allure.label.epic:E-commerce
+@allure.label.feature:Product_Details
+@allure.label.story:View_Product_Details
+@allure.label.severity:critical
+@allure.label.owner:QA_Team
 Feature: Product Detail
   As a user
   I want to view product details
@@ -31,3 +36,4 @@ Feature: Product Detail
       | 17    |
       | 18    |
       | 19    |
+

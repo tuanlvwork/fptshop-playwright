@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
 import { FptShopPage } from '../pages/FptShopPage';
+import { allure } from '../src/utils/allure';
 
 const brands = [
     { name: 'Apple', slug: 'apple' },
@@ -24,9 +25,20 @@ test.describe('Brand Filter Tests', () => {
 
     for (const brand of brands) {
         test(`Filter by Brand: ${brand.name}`, async ({ page }) => {
+            // Allure metadata
+            allure.epic('E-commerce');
+            allure.feature('Product Filtering');
+            allure.story('Brand Filter');
+            allure.severity('critical');
+            allure.owner('QA Team');
+            allure.tag('brand');
+            allure.tag(brand.name);
+            allure.description(`Verify that filtering products by ${brand.name} brand works correctly`);
+
             await fptShopPage.filterByBrand(brand.slug);
             await fptShopPage.verifyUrlContains(brand.slug);
             await fptShopPage.verifyHeaderContains(brand.name);
         });
     }
 });
+

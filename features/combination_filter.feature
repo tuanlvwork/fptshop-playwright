@@ -1,4 +1,9 @@
 @combination
+@allure.label.epic:E-commerce
+@allure.label.feature:Product_Filtering
+@allure.label.story:Combination_Filter
+@allure.label.severity:normal
+@allure.label.owner:QA_Team
 Feature: Combination Filter
   As a user
   I want to filter by both brand and price

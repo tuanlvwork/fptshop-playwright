@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { FptShopPage } from '../pages/FptShopPage';
+import { allure } from '../src/utils/allure';
 
 const brands = [
     { name: 'Apple', slug: 'apple' },
@@ -36,6 +37,17 @@ test.describe('Combination Filter Tests', () => {
         for (const range of priceRanges) {
             if (count >= 44) break;
             test(`Combination: ${brand.name} - ${range.label}`, async ({ page }) => {
+                // Allure metadata
+                allure.epic('E-commerce');
+                allure.feature('Product Filtering');
+                allure.story('Combination Filter');
+                allure.severity('normal');
+                allure.owner('QA Team');
+                allure.tag('combination');
+                allure.tag(brand.name);
+                allure.tag('price');
+                allure.description(`Verify that filtering products by ${brand.name} brand and price range "${range.label}" works correctly`);
+
                 await fptShopPage.filterByBrandAndPrice(brand.slug, range.urlParam);
                 await expect(page.locator('footer')).toBeVisible();
             });
@@ -43,3 +55,4 @@ test.describe('Combination Filter Tests', () => {
         }
     }
 });
+

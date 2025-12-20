@@ -1,4 +1,9 @@
 @brand
+@allure.label.epic:E-commerce
+@allure.label.feature:Product_Filtering
+@allure.label.story:Brand_Filter
+@allure.label.severity:critical
+@allure.label.owner:QA_Team
 Feature: Brand Filter
   As a user
   I want to filter phones by brand
@@ -22,3 +27,4 @@ Feature: Brand Filter
       | Asus    | asus    |
       | Tecno   | tecno   |
       | Masstel | masstel |
+

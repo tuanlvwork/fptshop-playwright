@@ -33,7 +33,7 @@ export default defineConfig({
     testDir: './tests',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 0,
+    retries: parseInt(process.env.RETRIES || (process.env.CI ? '2' : '1'), 10),
     workers: process.env.CI ? 1 : undefined,
     reporter: reporters,
     use: {

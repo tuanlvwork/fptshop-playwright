@@ -1,4 +1,9 @@
 @price
+@allure.label.epic:E-commerce
+@allure.label.feature:Product_Filtering
+@allure.label.story:Price_Filter
+@allure.label.severity:critical
+@allure.label.owner:QA_Team
 Feature: Price Filter
   As a user
   I want to filter phones by price range
@@ -18,3 +23,4 @@ Feature: Price Filter
       | Từ 7 - 13 triệu | tu-7-13-trieu   |
       | Từ 13 - 20 triệu| tu-13-20-trieu  |
       | Trên 20 triệu   | tren-20-trieu   |
+

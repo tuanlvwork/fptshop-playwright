@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
 import { FptShopPage } from '../pages/FptShopPage';
+import { allure } from '../src/utils/allure';
 
 const products = [
     'iPhone 15 Pro Max',
@@ -34,8 +35,19 @@ test.describe('Product Search Tests', () => {
 
     for (const product of products) {
         test(`Search for Product: ${product}`, async ({ page }) => {
+            // Allure metadata
+            allure.epic('E-commerce');
+            allure.feature('Product Search');
+            allure.story('Search by Product Name');
+            allure.severity('blocker');
+            allure.owner('QA Team');
+            allure.tag('search');
+            allure.tag(product.split(' ')[0]); // Tag with brand name (first word)
+            allure.description(`Verify that searching for "${product}" returns relevant product results`);
+
             await fptShopPage.searchProduct(product);
             await fptShopPage.verifyProductListVisible();
         });
     }
 });
+
