@@ -37,13 +37,29 @@ try {
         execSync('npm install -g allure-commandline --save-dev', { stdio: 'inherit' });
     }
 
+    // Generate standard report (for local serving)
     execSync(`npx allure generate ${resultsDir} --clean -o ${reportDir}`, {
         stdio: 'inherit'
     });
+    console.log('\n✅ Standard report generated!');
 
-    console.log('\n✅ Allure Report generated successfully!');
-    console.log(`\n📂 Location: ${reportDir}`);
-    console.log(`🌐 Open: npm run allure:open`);
+    // Generate single-file report (portable, for GCS/sharing)
+    const singleFileDir = path.join(__dirname, '../allure-report-single');
+    execSync(`npx allure generate ${resultsDir} --clean --single-file -o ${singleFileDir}`, {
+        stdio: 'inherit'
+    });
+
+    // Copy to main report folder
+    fs.copyFileSync(
+        path.join(singleFileDir, 'index.html'),
+        path.join(reportDir, 'complete-report.html')
+    );
+    console.log('✅ Single-file report generated!');
+
+    console.log('\n📂 Reports generated:');
+    console.log(`   Standard: ${reportDir}/index.html (needs server)`);
+    console.log(`   Portable: ${reportDir}/complete-report.html (works anywhere, uploadable to GCS)`);
+    console.log(`\n🌐 Open: npm run allure:open`);
     console.log(`🚀 Serve: npm run allure:serve\n`);
 } catch (error) {
     console.error('\n❌ Error generating Allure report:', error.message);
