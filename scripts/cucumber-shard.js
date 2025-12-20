@@ -42,24 +42,39 @@ const reportFileJson = `cucumber-report-${shardIndex}.json`;
 const tagsArg = args.find(arg => arg.startsWith('--tags'));
 const parallelArg = args.find(arg => arg.startsWith('--parallel='));
 
-// Check if Allure is enabled (for logging purposes)
-const enableAllure = process.env.ENABLE_ALLURE !== 'false';
+// Check if Allure is enabled
+// IMPORTANT: Command line --format arguments override the profile's format settings,
+// so we must explicitly add the Allure formatter here when enabled.
+const enableAllure = process.env.ENABLE_ALLURE === 'true';
 const allureOutputDir = process.env.ALLURE_OUTPUT_DIR || 'allure-results';
 
+// Ensure allure-results directory exists
 if (enableAllure) {
+    const resultsPath = path.join(process.cwd(), allureOutputDir);
+    if (!fs.existsSync(resultsPath)) {
+        fs.mkdirSync(resultsPath, { recursive: true });
+        console.log(`Created Allure results directory: ${resultsPath}`);
+    }
     console.log(`Allure enabled, results will be written to: ${allureOutputDir}`);
 }
 
 // Build cucumber arguments
-// Note: The 'shard' profile in cucumber.js already includes the Allure formatter via allureFormat
-// and formatOptions, so we don't need to add it here. We just override the report file names.
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
-    '--profile', 'shard',
+    '--require-module', 'ts-node/register',
+    '--require-module', 'tsconfig-paths/register',
+    '--require', 'src/steps/*.ts',
+    '--require', 'src/support/*.ts',
     '--format', 'progress', // Use progress instead of progress-bar for CI
     '--format', `html:${reportFileHtml}`,
     '--format', `json:${reportFileJson}`,
 ];
+
+// Add Allure formatter if enabled
+if (enableAllure) {
+    cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
+    cucumberArgs.push('--format-options', JSON.stringify({ resultsDir: allureOutputDir }));
+}
 
 if (tagsArg) {
     const tags = tagsArg.split('=')[1] || args[args.indexOf(tagsArg) + 1];
@@ -96,4 +111,3 @@ const child = spawn(cmd, ['cucumber-js', ...cucumberArgs], { stdio: 'inherit' })
 child.on('close', (code) => {
     process.exit(code);
 });
-
