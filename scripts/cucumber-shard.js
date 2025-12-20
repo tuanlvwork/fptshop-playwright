@@ -79,14 +79,21 @@ if (enableAllure) {
 }
 
 if (tagsArg) {
-    const tags = tagsArg.split('=')[1] || args[args.indexOf(tagsArg) + 1];
+    console.log(`Tags arg detected. Raw args:`, args);
     const tagsIndex = args.indexOf('--tags');
     if (tagsIndex !== -1 && args[tagsIndex + 1]) {
-        cucumberArgs.push('--tags', args[tagsIndex + 1]);
+        const tagValue = args[tagsIndex + 1];
+        // Remove surrounding quotes if present (shell might include them)
+        const cleanTag = tagValue.replace(/^['"]|['"]$/g, '');
+        console.log(`Tag value: "${tagValue}" -> cleaned: "${cleanTag}"`);
+        cucumberArgs.push('--tags', cleanTag);
     } else {
         const directTags = args.find(a => a.startsWith('--tags='));
         if (directTags) {
-            cucumberArgs.push(directTags);
+            const tagValue = directTags.split('=')[1];
+            const cleanTag = tagValue.replace(/^['"]|['"]$/g, '');
+            console.log(`Direct tag value: "${tagValue}" -> cleaned: "${cleanTag}"`);
+            cucumberArgs.push('--tags', cleanTag);
         }
     }
 }
