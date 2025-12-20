@@ -43,10 +43,12 @@ const tagsArg = args.find(arg => arg.startsWith('--tags'));
 const parallelArg = args.find(arg => arg.startsWith('--parallel='));
 
 // Check if Allure is enabled
-// IMPORTANT: Command line --format arguments override the profile's format settings,
-// so we must explicitly add the Allure formatter here when enabled.
-const enableAllure = process.env.ENABLE_ALLURE === 'true';
+// Uses same logic as playwright.config.ts and cucumber.js - enabled unless explicitly 'false'
+const enableAllure = process.env.ENABLE_ALLURE !== 'false';
 const allureOutputDir = process.env.ALLURE_OUTPUT_DIR || 'allure-results';
+
+console.log(`ENABLE_ALLURE env: ${process.env.ENABLE_ALLURE}`);
+console.log(`Allure enabled: ${enableAllure}`);
 
 // Ensure allure-results directory exists
 if (enableAllure) {

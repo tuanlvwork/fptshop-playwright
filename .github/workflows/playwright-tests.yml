@@ -52,9 +52,11 @@ jobs:
       if: steps.playwright-cache.outputs.cache-hit == 'true'
       run: npx playwright install-deps
     - name: Run Playwright tests
-      run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      run: |
+        echo "ENABLE_ALLURE=$ENABLE_ALLURE"
+        npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       env:
-        ENABLE_ALLURE: true
+        ENABLE_ALLURE: 'true'
 
     - name: Upload blob report
       uses: actions/upload-artifact@v4

@@ -108,13 +108,15 @@ jobs:
 
     - name: Run Cucumber tests
       run: |
+        echo "ENABLE_ALLURE=$ENABLE_ALLURE"
+        echo "Running shard tests..."
         TAGS_ARG=""
         if [ "${{ github.event.inputs.tags }}" != "all" ] && [ -n "${{ github.event.inputs.tags }}" ]; then
           TAGS_ARG="--tags '${{ github.event.inputs.tags }}'"
         fi
         npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG
       env:
-        ENABLE_ALLURE: true
+        ENABLE_ALLURE: 'true'
 
     - name: Upload trace files
       uses: actions/upload-artifact@v4
@@ -134,13 +136,23 @@ jobs:
           cucumber-report-${{ matrix.shardIndex }}.json
         retention-days: 1
 
-    - name: Prepare Allure Results
+    - name: Debug Allure Results
       if: always()
       run: |
-        mkdir -p allure-results
-        echo "Allure results directory contents:"
-        ls -la allure-results/ || echo "No files found"
-        echo "Total files: $(find allure-results -type f | wc -l)"
+        echo "=== Allure Results Debug ==="
+        echo "Current directory: $(pwd)"
+        echo "Directory listing:"
+        ls -la
+        echo ""
+        echo "Checking allure-results directory:"
+        if [ -d "allure-results" ]; then
+          echo "allure-results exists"
+          ls -la allure-results/ | head -20
+          echo "JSON files: $(find allure-results -name '*.json' -type f | wc -l)"
+          echo "Total files: $(find allure-results -type f | wc -l)"
+        else
+          echo "allure-results directory does NOT exist!"
+        fi
 
     - name: Upload Allure Results
       uses: actions/upload-artifact@v4
