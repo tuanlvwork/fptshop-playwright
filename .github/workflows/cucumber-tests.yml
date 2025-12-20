@@ -277,38 +277,20 @@ jobs:
     - name: Generate Allure Report
       run: |
         if [ -d "allure-results" ] && [ "$(ls -A allure-results 2>/dev/null)" ]; then
-          echo "Generating Allure report from allure-results/"
-          
-          # Generate standard report (for local serving)
-          allure generate allure-results --clean -o allure-report
-          echo "Standard report generated"
-          
-          # Generate single-file report (portable, works on GCS/file system)
+          echo "Generating single-file Allure report from allure-results/"
           allure generate allure-results --clean --single-file -o allure-report-single
           echo "Single-file report generated"
-          
-          # Copy single file to main report folder for convenience
-          cp allure-report-single/index.html allure-report/complete-report.html
-          
-          ls -la allure-report/
+          ls -la allure-report-single/
         else
           echo "No Allure results found, creating empty report placeholder"
-          mkdir -p allure-report
-          echo "<html><body><h1>No test results available</h1></body></html>" > allure-report/index.html
+          mkdir -p allure-report-single
+          echo "<html><body><h1>No test results available</h1></body></html>" > allure-report-single/index.html
         fi
-
-    - name: Upload Allure Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-report-cucumber
-        path: allure-report
-        retention-days: 30
-        if-no-files-found: warn
 
     - name: Upload Single-File Report
       uses: actions/upload-artifact@v4
       with:
-        name: allure-report-cucumber-single
+        name: allure-report-cucumber
         path: allure-report-single/index.html
         retention-days: 30
         if-no-files-found: warn
