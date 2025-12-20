@@ -38,6 +38,10 @@ export interface TestConfig {
 
     // CI
     isCI: boolean;
+
+    // Allure
+    enableAllure: boolean;
+    allureOutputDir: string;
 }
 
 const config: TestConfig = {
@@ -74,6 +78,10 @@ const config: TestConfig = {
 
     // CI
     isCI: process.env.CI === 'true' || process.env.CI === '1',
+
+    // Allure
+    enableAllure: process.env.ENABLE_ALLURE !== 'false',
+    allureOutputDir: process.env.ALLURE_OUTPUT_DIR || 'allure-results',
 };
 
 export default config;

@@ -113,6 +113,8 @@ jobs:
           TAGS_ARG="--tags '${{ github.event.inputs.tags }}'"
         fi
         npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG
+      env:
+        ENABLE_ALLURE: true
 
     - name: Upload trace files
       uses: actions/upload-artifact@v4
@@ -131,6 +133,14 @@ jobs:
           cucumber-report-${{ matrix.shardIndex }}.html
           cucumber-report-${{ matrix.shardIndex }}.json
         retention-days: 1
+
+    - name: Upload Allure Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results-cucumber-${{ matrix.shardIndex }}
+        path: allure-results/
+        retention-days: 7
 
   merge-reports:
     if: always()
@@ -208,4 +218,36 @@ jobs:
       with:
         name: cucumber-report-summary
         path: cucumber-report/cucumber-report-summary.png
+        retention-days: 30
+
+  allure-report:
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+    - name: Download all Allure results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: allure-results-cucumber-*
+        merge-multiple: true
+        path: allure-results
+    - name: Generate Allure Report
+      uses: simple-elf/allure-report-action@master
+      with:
+        allure_results: allure-results
+        allure_report: allure-report
+        gh_pages: gh-pages
+        allure_history: allure-history
+    - name: Upload Allure Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report-cucumber
+        path: allure-report
         retention-days: 30

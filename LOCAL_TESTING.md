@@ -102,7 +102,55 @@ npm run clean:reports
 
 # Clean only trace files
 npm run clean:traces
+
+# Clean only Allure files
+npm run allure:clean
+
+# Clean everything (all artifacts + Allure)
+npm run clean:all
 ```
+
+## 📊 Allure Reports
+
+Allure provides enhanced reporting with historical trends, categorization, and rich visualizations.
+
+### Generate Allure Report
+
+```bash
+# Run tests with Allure (enabled by default)
+npm test
+# or
+npm run test:cucumber
+
+# Generate and open report
+npm run allure:generate
+npm run allure:open
+
+# Or serve directly (auto-refresh)
+npm run allure:serve
+
+# Run tests and immediately serve Allure report
+npm run test:allure
+npm run test:cucumber:allure
+```
+
+### Allure Features
+
+- 📈 Detailed test execution graphs
+- 🏷️ Test categorization and tagging
+- 📸 Screenshots and attachments
+- ⏱️ Historical trends (if enabled)
+- 📊 Suites and behaviors view
+- 🔄 Timeline visualization
+
+### Disable Allure
+
+```bash
+# Temporarily disable Allure
+ENABLE_ALLURE=false npm test
+```
+
+See [ALLURE_REPORT.md](./ALLURE_REPORT.md) for detailed documentation.
 
 ## 📝 Workflow Examples
 
@@ -183,6 +231,7 @@ npx cucumber-js features/brand_filter.feature
 |------|----------|--------------|
 | Playwright | `playwright-report/` | `npm run report:open:playwright` |
 | Cucumber | `cucumber-report/` | `npm run report:open:cucumber` |
+| Allure | `allure-report/` | `npm run allure:open` |
 | Traces | `traces/` | `npm run trace:show` |
 | Screenshots | Embedded in reports | - |
 

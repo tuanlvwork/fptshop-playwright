@@ -12,6 +12,11 @@ cucumber-report/
 all-cucumber-reports/
 traces/
 dist/
+
+# Allure
+allure-results/
+allure-report/
+.allure/
 # Ignore root level reports but keep source files
 /*.json
 /*.html
