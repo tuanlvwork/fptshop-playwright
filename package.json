@@ -46,9 +46,9 @@
     "allure-js-commons": "3.4.3",
     "allure-playwright": "3.4.3",
     "cucumber-html-reporter": "7.2.0",
-    "dotenv": "16.4.0",
+    "dotenv": "16.6.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.0.0"
+    "typescript": "5.9.3"
   }
 }
