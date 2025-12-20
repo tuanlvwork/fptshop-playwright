@@ -51,16 +51,17 @@ console.log(`ENABLE_ALLURE env: ${process.env.ENABLE_ALLURE}`);
 console.log(`Allure enabled: ${enableAllure}`);
 
 // Ensure allure-results directory exists
+const resultsPath = path.join(process.cwd(), allureOutputDir);
 if (enableAllure) {
-    const resultsPath = path.join(process.cwd(), allureOutputDir);
     if (!fs.existsSync(resultsPath)) {
         fs.mkdirSync(resultsPath, { recursive: true });
         console.log(`Created Allure results directory: ${resultsPath}`);
     }
-    console.log(`Allure enabled, results will be written to: ${allureOutputDir}`);
+    console.log(`Allure enabled, results will be written to: ${resultsPath}`);
 }
 
-// Build cucumber arguments
+// Build cucumber arguments - use profile 'shard' which has the common settings
+// The profile already includes the Allure formatter when ENABLE_ALLURE is set
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
     '--require-module', 'ts-node/register',
@@ -75,24 +76,14 @@ const cucumberArgs = [
 // Add Allure formatter if enabled
 if (enableAllure) {
     cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
-    cucumberArgs.push('--format-options', JSON.stringify({ resultsDir: allureOutputDir }));
 }
 
 if (tagsArg) {
     const tags = tagsArg.split('=')[1] || args[args.indexOf(tagsArg) + 1];
-    // Handle case where tags might be passed as --tags "tag" or --tags="tag"
-    // The shell script passes it as --tags 'tag', so node receives it as two args usually, 
-    // but here we are parsing from process.argv manually passed from npm script.
-    // The npm script invocation is: node scripts/cucumber-shard.js --shard=... --tags '...'
-
-    // Let's rely on how we passed it in YAML: $TAGS_ARG which is "--tags '...'"
-    // process.argv will see: ... '--shard=...', '--tags', '@tag'
-
     const tagsIndex = args.indexOf('--tags');
     if (tagsIndex !== -1 && args[tagsIndex + 1]) {
         cucumberArgs.push('--tags', args[tagsIndex + 1]);
     } else {
-        // Try to handle --tags=... format if that was passed
         const directTags = args.find(a => a.startsWith('--tags='));
         if (directTags) {
             cucumberArgs.push(directTags);
@@ -107,9 +98,30 @@ if (parallelArg) {
 
 console.log(`Running command: npx cucumber-js ${cucumberArgs.join(' ')}`);
 
+// Set ALLURE_RESULTS_DIR environment variable for allure-cucumberjs
+const childEnv = {
+    ...process.env,
+    ALLURE_RESULTS_DIR: resultsPath,
+};
+
 const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const child = spawn(cmd, ['cucumber-js', ...cucumberArgs], { stdio: 'inherit' });
+const child = spawn(cmd, ['cucumber-js', ...cucumberArgs], {
+    stdio: 'inherit',
+    env: childEnv,
+});
 
 child.on('close', (code) => {
+    // List what was generated in allure-results
+    console.log(`\n=== Allure Results Check ===`);
+    if (fs.existsSync(resultsPath)) {
+        const files = fs.readdirSync(resultsPath);
+        console.log(`Total files in ${resultsPath}: ${files.length}`);
+        if (files.length > 0) {
+            console.log(`First 10 files: ${files.slice(0, 10).join(', ')}`);
+        }
+    } else {
+        console.log(`Directory ${resultsPath} does not exist!`);
+    }
+
     process.exit(code);
 });
