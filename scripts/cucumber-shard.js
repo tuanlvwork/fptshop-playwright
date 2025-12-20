@@ -42,13 +42,24 @@ const reportFileJson = `cucumber-report-${shardIndex}.json`;
 const tagsArg = args.find(arg => arg.startsWith('--tags'));
 const parallelArg = args.find(arg => arg.startsWith('--parallel='));
 
+// Check if Allure is enabled
+const enableAllure = process.env.ENABLE_ALLURE !== 'false';
+const allureOutputDir = process.env.ALLURE_OUTPUT_DIR || 'allure-results';
+
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
     '--profile', 'shard',
     '--format', 'progress', // Use progress instead of progress-bar for CI
     '--format', `html:${reportFileHtml}`,
-    '--format', `json:${reportFileJson}`
+    '--format', `json:${reportFileJson}`,
 ];
+
+// Add Allure formatter if enabled
+if (enableAllure) {
+    cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
+    cucumberArgs.push('--format-options', JSON.stringify({ resultsDir: allureOutputDir }));
+    console.log(`Allure enabled, results will be written to: ${allureOutputDir}`);
+}
 
 if (tagsArg) {
     const tags = tagsArg.split('=')[1] || args[args.indexOf(tagsArg) + 1];
@@ -77,9 +88,12 @@ if (parallelArg) {
     cucumberArgs.push('--parallel', workers);
 }
 
+console.log(`Running command: npx cucumber-js ${cucumberArgs.join(' ')}`);
+
 const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const child = spawn(cmd, ['cucumber-js', ...cucumberArgs], { stdio: 'inherit' });
 
 child.on('close', (code) => {
     process.exit(code);
 });
+
