@@ -42,10 +42,17 @@ const reportFileJson = `cucumber-report-${shardIndex}.json`;
 const tagsArg = args.find(arg => arg.startsWith('--tags'));
 const parallelArg = args.find(arg => arg.startsWith('--parallel='));
 
-// Check if Allure is enabled
+// Check if Allure is enabled (for logging purposes)
 const enableAllure = process.env.ENABLE_ALLURE !== 'false';
 const allureOutputDir = process.env.ALLURE_OUTPUT_DIR || 'allure-results';
 
+if (enableAllure) {
+    console.log(`Allure enabled, results will be written to: ${allureOutputDir}`);
+}
+
+// Build cucumber arguments
+// Note: The 'shard' profile in cucumber.js already includes the Allure formatter via allureFormat
+// and formatOptions, so we don't need to add it here. We just override the report file names.
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
     '--profile', 'shard',
@@ -53,13 +60,6 @@ const cucumberArgs = [
     '--format', `html:${reportFileHtml}`,
     '--format', `json:${reportFileJson}`,
 ];
-
-// Add Allure formatter if enabled
-if (enableAllure) {
-    cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
-    cucumberArgs.push('--format-options', JSON.stringify({ resultsDir: allureOutputDir }));
-    console.log(`Allure enabled, results will be written to: ${allureOutputDir}`);
-}
 
 if (tagsArg) {
     const tags = tagsArg.split('=')[1] || args[args.indexOf(tagsArg) + 1];
