@@ -65,6 +65,23 @@ try {
     });
     console.log('\n✅ Standard report generated (with history preservation)!');
 
+    // Update allure-results with the NEW history generated in the standard report
+    // This ensures the single-file report includes the latest trend point
+    const newHistorySource = path.join(reportDir, 'history');
+    const resultsHistoryPath = path.join(resultsDir, 'history');
+
+    if (fs.existsSync(newHistorySource)) {
+        if (!fs.existsSync(resultsHistoryPath)) {
+            fs.mkdirSync(resultsHistoryPath, { recursive: true });
+        }
+
+        const newHistoryFiles = fs.readdirSync(newHistorySource);
+        newHistoryFiles.forEach(file => {
+            fs.copyFileSync(path.join(newHistorySource, file), path.join(resultsHistoryPath, file));
+        });
+        console.log('   Updated results with latest history for single-file report.');
+    }
+
     // Generate single-file report (portable, for GCS/sharing)
     const singleFileDir = path.join(__dirname, '../allure-report-single');
     execSync(`npx allure generate ${resultsDir} --clean --single-file -o ${singleFileDir}`, {
