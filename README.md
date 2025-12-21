@@ -7,15 +7,19 @@ This project implements automation tests for FPT Shop (fptshop.com.vn) using two
 ## Project Structure
 
 ```
-├── .github/workflows/      # CI/CD Workflows
+├── .github/workflows/      # CI/CD Workflows (8 shards, Dockerized)
 ├── features/               # Cucumber Feature files (.feature)
+│   ├── brand_filter.feature
+│   ├── sorting.feature
+│   ├── feature_filter.feature
+│   └── ...
 ├── pages/                  # Playwright Native Page Objects
 ├── scripts/                # Helper scripts (sharding, reporting)
 ├── src/                    # Cucumber Source Code
 │   ├── pages/              # Hierarchical Page Objects (H-POM)
 │   ├── steps/              # Step Definitions
 │   ├── support/            # World & Hooks
-│   └── utils/              # Diagnostics & Logging Modules (NEW)
+│   └── utils/              # Diagnostics & Logging Modules
 ├── tests/                  # Playwright Native Tests (.spec.ts)
 └── playwright.config.ts    # Playwright Configuration
 ```
@@ -30,7 +34,23 @@ This project implements automation tests for FPT Shop (fptshop.com.vn) using two
 ```bash
 npm install
 npx playwright install --with-deps
+cp .env.example .env
 ```
+
+## Configuration
+
+Configure the project by editing `.env`. Key variables:
+
+| Variable | Description | Default |
+| :--- | :--- | :--- |
+| `BASE_URL` | Application URL | https://fptshop.com.vn |
+| `HEADLESS` | Run without UI | `true` |
+| `PARALLEL_WORKERS` | Local parallel threads | `4` |
+| `ENABLE_ALLURE` | Enable Allure reporting | `false` |
+| `SCREENSHOT_ON_FAILURE`| Capture screenshot if failed | `true` |
+| `TRACE_ON_FAILURE_ONLY`| Save traces only on error | `true` |
+
+See `.env.example` for full list.
 
 ## Running Tests
 
@@ -72,11 +92,11 @@ npm run allure:open
 ```
 
 ### Failure Diagnostics
-When a test fails, the framework automatically captures:
-1.  **Network Logs** (`network.json`): All HTTP requests/responses, identifying slow APIs and 5xx errors.
-2.  **Console Logs** (`console.json`): Browser console errors and warnings.
-3.  **Performance** (`performance.json`): Execution timing for every step.
-4.  **Traces**: Playwright traces for visual debugging (CI only).
+When a test fails, the framework automatically captures and analyzes:
+1.  **Network Logs** (`src/utils/network-logger.ts`): Captures all HTTP requests, identifies slow APIs (>2s), and logs failed status codes.
+2.  **Console Logs** (`src/utils/console-capture.ts`): Records browser console errors and JS exceptions.
+3.  **Performance** (`src/utils/performance-tracker.ts`): Measures execution time for every test step.
+4.  **Failure Analysis** (`src/utils/diagnostics.ts`): Automatically suggests root causes (e.g., "Timeout", "Element Not Found").
 
 These artifacts are attached to the Allure report and uploaded to GitHub Actions on failure.
 
@@ -84,8 +104,22 @@ These artifacts are attached to the Allure report and uploaded to GitHub Actions
 
 The project uses GitHub Actions with optimized workflows:
 *   **Dockerized**: Tests run in `mcr.microsoft.com/playwright` container for speed and consistency.
-*   **Sharding**: 4x concurrency for fast execution.
+*   **Sharding**: **8x concurrency** for fast execution of the large test suite.
 *   **Artifacts**:
     *   `diagnostics-{shard}`: JSON logs for debugging.
     *   `traces-{shard}`: Playwright visual traces.
     *   `allure-report-single`: A portable HTML report containing all results.
+
+## Technical Architecture
+
+### Key Modules
+| Module | Description |
+| :--- | :--- |
+| `src/utils/diagnostics.ts` | Central service that orchestrates logging and failure analysis. |
+| `scripts/run-cucumber.js` | Robust local wrapper ensuring CLI tags (e.g., `@brand`) are correctly passed to report environment. |
+| `allure-categories.json` | Regex rules for grouping failures in reports. |
+
+### Best Practices Enforced
+*   **Declarative Gherkin**: Features describe *Business Behavior*, not UI clicks.
+*   **Nested Steps**: Page Objects use `allure.step()` to wrap low-level actions, keeping reports clean but debuggable.
+*   **Atomic Tests**: Each scenario is independent.
