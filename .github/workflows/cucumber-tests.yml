@@ -297,13 +297,18 @@ jobs:
           echo "Generating standard report to compute trends..."
           allure generate allure-results --clean -o allure-report
           
-          # 3. Preserve New History
-          echo "Saving new history..."
-          mkdir -p allure-history
-          cp -r allure-report/history/* allure-history/
-          
-          # 4. Update Results with New History (so single-file report gets it)
-          cp -r allure-report/history/* allure-results/history/
+          # 3. Preserve New History & 4. Update Results
+          if [ -d "allure-report/history" ]; then
+            echo "Saving new history..."
+            mkdir -p allure-history
+            cp -r allure-report/history/* allure-history/
+            
+            echo "Updating results with new history for single-file report..."
+            mkdir -p allure-results/history
+            cp -r allure-report/history/* allure-results/history/
+          else
+            echo "⚠️ No history generated in this run (possibly first run or no results)."
+          fi
 
           # 5. Generate Single-File Report
           echo "Generating single-file Allure report..."
