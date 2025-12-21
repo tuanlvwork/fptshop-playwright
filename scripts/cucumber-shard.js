@@ -78,6 +78,8 @@ if (enableAllure) {
     cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
 }
 
+let tagsForEnv = '';
+
 if (tagsArg) {
     console.log(`Tags arg detected. Raw args:`, args);
     const tagsIndex = args.indexOf('--tags');
@@ -87,6 +89,7 @@ if (tagsArg) {
         const cleanTag = tagValue.replace(/^['"]|['"]$/g, '');
         console.log(`Tag value: "${tagValue}" -> cleaned: "${cleanTag}"`);
         cucumberArgs.push('--tags', cleanTag);
+        tagsForEnv = cleanTag;
     } else {
         const directTags = args.find(a => a.startsWith('--tags='));
         if (directTags) {
@@ -94,6 +97,7 @@ if (tagsArg) {
             const cleanTag = tagValue.replace(/^['"]|['"]$/g, '');
             console.log(`Direct tag value: "${tagValue}" -> cleaned: "${cleanTag}"`);
             cucumberArgs.push('--tags', cleanTag);
+            tagsForEnv = cleanTag;
         }
     }
 }
@@ -109,6 +113,7 @@ console.log(`Running command: npx cucumber-js ${cucumberArgs.join(' ')}`);
 const childEnv = {
     ...process.env,
     ALLURE_RESULTS_DIR: resultsPath,
+    ALLURE_TAGS: tagsForEnv || process.env.TAGS || 'None',
 };
 
 const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';

@@ -7,6 +7,7 @@ export class CustomWorld extends World {
     page!: Page;
     testMetadata: {
         startTime?: number;
+        scenarioName?: string;
         errors: string[];
         consoleLogs: string[];
     };

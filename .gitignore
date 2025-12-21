@@ -16,7 +16,11 @@ dist/
 # Allure
 allure-results/
 allure-report/
+allure-report-single/
 .allure/
+
+# Diagnostics
+diagnostics/
 # Ignore root level reports but keep source files
 /*.json
 /*.html
@@ -24,3 +28,4 @@ allure-report/
 !package-lock.json
 !cucumber.js
 !tsconfig.json
+!allure-categories.json

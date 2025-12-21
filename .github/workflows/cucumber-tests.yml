@@ -126,6 +126,16 @@ jobs:
         name: traces-${{ matrix.shardIndex }}
         path: traces/
         retention-days: 7
+        if-no-files-found: ignore
+
+    - name: Upload diagnostics
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: diagnostics-${{ matrix.shardIndex }}
+        path: diagnostics/
+        retention-days: 7
+        if-no-files-found: ignore
 
     - name: Upload shard report
       uses: actions/upload-artifact@v4
@@ -265,13 +275,41 @@ jobs:
     - name: Install Allure Commandline
       run: npm install -g allure-commandline
 
+    - name: Load Allure History
+      uses: actions/cache@v4
+      with:
+        path: allure-history
+        key: allure-history-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          allure-history-${{ runner.os }}-
+
     - name: Generate Allure Report
       run: |
         if [ -d "allure-results" ] && [ "$(ls -A allure-results 2>/dev/null)" ]; then
-          echo "Generating single-file Allure report from allure-results/"
+          # 1. Prepare History
+          if [ -d "allure-history" ]; then
+            echo "📜 found previous history, copying to results..."
+            mkdir -p allure-results/history
+            cp -r allure-history/* allure-results/history/ || true
+          fi
+
+          # 2. Generate Standard Report (to compute new trends)
+          echo "Generating standard report to compute trends..."
+          allure generate allure-results --clean -o allure-report
+          
+          # 3. Preserve New History
+          echo "Saving new history..."
+          mkdir -p allure-history
+          cp -r allure-report/history/* allure-history/
+          
+          # 4. Update Results with New History (so single-file report gets it)
+          cp -r allure-report/history/* allure-results/history/
+
+          # 5. Generate Single-File Report
+          echo "Generating single-file Allure report..."
           allure generate allure-results --clean --single-file -o allure-report-single
-          echo "Single-file report generated"
-          ls -la allure-report-single/
+          
+          echo "✅ Reports generated"
         else
           echo "No Allure results found, creating empty report placeholder"
           mkdir -p allure-report-single

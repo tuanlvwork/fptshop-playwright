@@ -37,11 +37,33 @@ try {
         execSync('npm install -g allure-commandline --save-dev', { stdio: 'inherit' });
     }
 
+    // Preserve history for Trend charts
+    // 1. Check if previous history exists
+    const historySource = path.join(reportDir, 'history');
+    const historyDest = path.join(resultsDir, 'history');
+
+    if (fs.existsSync(historySource)) {
+        console.log('📜 Found previous history. Preserving for Trend chart...');
+        if (!fs.existsSync(historyDest)) {
+            fs.mkdirSync(historyDest, { recursive: true });
+        }
+
+        // Copy all history files
+        const historyFiles = fs.readdirSync(historySource);
+        historyFiles.forEach(file => {
+            fs.copyFileSync(
+                path.join(historySource, file),
+                path.join(historyDest, file)
+            );
+        });
+        console.log(`   Copied ${historyFiles.length} history files.`);
+    }
+
     // Generate standard report (for local serving)
     execSync(`npx allure generate ${resultsDir} --clean -o ${reportDir}`, {
         stdio: 'inherit'
     });
-    console.log('\n✅ Standard report generated!');
+    console.log('\n✅ Standard report generated (with history preservation)!');
 
     // Generate single-file report (portable, for GCS/sharing)
     const singleFileDir = path.join(__dirname, '../allure-report-single');

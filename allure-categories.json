@@ -1,0 +1,90 @@
+[
+    {
+        "name": "🌐 Network Errors",
+        "description": "Tests that failed due to API failures, network issues, or server errors (5xx)",
+        "messageRegex": ".*(net::|ERR_|ECONNREFUSED|ETIMEDOUT|502|503|504|500|Request Failed|API.*fail|fetch.*fail).*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    },
+    {
+        "name": "⏱️ Timeout Issues",
+        "description": "Tests that failed due to timeout while waiting for elements or navigation",
+        "messageRegex": ".*(timeout|Timeout|timed out|exceeded.*time|waiting for).*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    },
+    {
+        "name": "👁️ Visibility Issues",
+        "description": "Tests that failed because elements were not visible or interactable",
+        "messageRegex": ".*(not visible|hidden|visibility|obscured|overlapped|not interactable|pointer-events).*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    },
+    {
+        "name": "🔍 Element Not Found",
+        "description": "Tests that failed because selectors did not match any elements",
+        "messageRegex": ".*(not found|no element|locator.*failed|selector.*not|waiting for locator|0 elements).*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    },
+    {
+        "name": "🔄 Stale Element",
+        "description": "Tests that failed because elements were detached or became stale",
+        "messageRegex": ".*(stale|detached|removed from|no longer attached|element.*removed).*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    },
+    {
+        "name": "💥 JavaScript Errors",
+        "description": "Tests that failed due to JavaScript exceptions in the browser",
+        "messageRegex": ".*(TypeError|ReferenceError|SyntaxError|Error:|Exception|script error|JavaScript).*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    },
+    {
+        "name": "🚫 Navigation Errors",
+        "description": "Tests that failed during page navigation",
+        "messageRegex": ".*(navigation|navigate|goto|page.*load|ERR_NAME|DNS).*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    },
+    {
+        "name": "✅ Assertion Failures",
+        "description": "Tests that failed due to assertion/expectation mismatch",
+        "messageRegex": ".*(expect|assert|should|toBe|toEqual|toContain|toHave|to be|to equal|to contain).*",
+        "matchedStatuses": [
+            "failed"
+        ]
+    },
+    {
+        "name": "⚙️ Test Infrastructure",
+        "description": "Tests that failed due to test setup/teardown issues",
+        "messageRegex": ".*(Before|After|Setup|Teardown|Hook|fixture|browser.*launch|context.*create).*",
+        "matchedStatuses": [
+            "broken"
+        ]
+    },
+    {
+        "name": "❓ Uncategorized",
+        "description": "Tests that failed for unknown or uncategorized reasons",
+        "messageRegex": ".*",
+        "matchedStatuses": [
+            "failed",
+            "broken"
+        ]
+    }
+]

@@ -8,15 +8,14 @@ This project implements automation tests for FPT Shop (fptshop.com.vn) using two
 
 ```
 ├── .github/workflows/      # CI/CD Workflows
-│   ├── playwright-tests.yml # Playwright Native workflow
-│   └── cucumber-tests.yml   # Cucumber workflow
 ├── features/               # Cucumber Feature files (.feature)
 ├── pages/                  # Playwright Native Page Objects
-├── scripts/                # Helper scripts (sharding, merging)
+├── scripts/                # Helper scripts (sharding, reporting)
 ├── src/                    # Cucumber Source Code
 │   ├── pages/              # Hierarchical Page Objects (H-POM)
 │   ├── steps/              # Step Definitions
-│   └── support/            # World & Hooks
+│   ├── support/            # World & Hooks
+│   └── utils/              # Diagnostics & Logging Modules (NEW)
 ├── tests/                  # Playwright Native Tests (.spec.ts)
 └── playwright.config.ts    # Playwright Configuration
 ```
@@ -33,56 +32,60 @@ npm install
 npx playwright install --with-deps
 ```
 
-## Approach 1: Playwright Native
+## Running Tests
 
-Best for developers and fast regression feedback.
+### 1. Cucumber (BDD) - Recommended for QA
 
-### Running Tests
+Run all features:
+```bash
+# Standard run (Basic reporting)
+npm run test:cucumber
+
+# Run with Allure Reporting (Recommended)
+ENABLE_ALLURE=true npm run test:cucumber
+```
+
+Run specific tags:
+```bash
+ENABLE_ALLURE=true npm run test:cucumber -- --tags="@brand"
+```
+
+### 2. Playwright Native - Recommended for Devs
 
 Run all tests:
 ```bash
 npx playwright test
 ```
 
-Run specific test file:
+## Reporting & Diagnostics
+
+### Allure Reporting (Enhanced)
+We use a customized Allure setup that provides rich context:
+*   **Categories**: Failures are automatically grouped (e.g., "🌐 Network Errors", "⏱️ Timeout Issues").
+*   **Environment**: Shows executed Tags, CI info, and Browser details.
+*   **Trends**: Tracks test history over time (works locally and in CI).
+
+To view reports locally:
 ```bash
-npx playwright test tests/product-search.spec.ts
+npm run allure:generate
+npm run allure:open
 ```
 
-View Report:
-```bash
-npx playwright show-report
-```
+### Failure Diagnostics
+When a test fails, the framework automatically captures:
+1.  **Network Logs** (`network.json`): All HTTP requests/responses, identifying slow APIs and 5xx errors.
+2.  **Console Logs** (`console.json`): Browser console errors and warnings.
+3.  **Performance** (`performance.json`): Execution timing for every step.
+4.  **Traces**: Playwright traces for visual debugging (CI only).
 
-## Approach 2: Cucumber (BDD)
+These artifacts are attached to the Allure report and uploaded to GitHub Actions on failure.
 
-Best for collaboration with stakeholders and documenting requirements.
+## CI/CD Pipeline
 
-### Running Tests
-
-Run all features:
-```bash
-npm run test:cucumber
-```
-
-Run with Sharding (Simulate CI):
-```bash
-# Run shard 1 of 4
-npm run test:cucumber:shard -- --shard=1/4
-```
-
-### Reports
-
-Cucumber generates reports in:
-*   `cucumber-report/index.html` (Unified HTML report)
-
-## CI/CD
-
-This project uses GitHub Actions with two separate workflows:
-
-1.  **Playwright Tests**: Runs native tests across 4 shards, merges blob reports.
-2.  **Cucumber Tests**: Runs feature files across 4 shards, merges JSON reports into a unified HTML report.
-
-Both workflows feature:
-*   **Parallel Sharding**: 4x concurrency.
-*   **Smart Caching**: `node_modules` and Playwright binaries are cached to speed up runs.
+The project uses GitHub Actions with optimized workflows:
+*   **Dockerized**: Tests run in `mcr.microsoft.com/playwright` container for speed and consistency.
+*   **Sharding**: 4x concurrency for fast execution.
+*   **Artifacts**:
+    *   `diagnostics-{shard}`: JSON logs for debugging.
+    *   `traces-{shard}`: Playwright visual traces.
+    *   `allure-report-single`: A portable HTML report containing all results.
