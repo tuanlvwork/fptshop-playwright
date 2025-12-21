@@ -18,7 +18,7 @@ on:
       shardTotal:
         description: 'Total number of shards'
         required: true
-        default: '4'
+        default: '8'
         type: string
       parallelWorkers:
         description: 'Number of parallel workers per shard'

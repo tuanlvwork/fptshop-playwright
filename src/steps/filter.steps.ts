@@ -43,3 +43,16 @@ When('I filter by brand {string} and price {string}', async function (this: Cust
     });
 });
 
+When('I sort items by {string}', async function (this: CustomWorld, criteria: string) {
+    const homePage = new HomePage(this.page);
+    await retryInteraction(async () => {
+        await homePage.filterBar.sortBy(criteria);
+    }, { maxAttempts: 3, errorMessage: `Failed to sort by ${criteria}` });
+});
+
+When('I filter by {string} with value {string}', async function (this: CustomWorld, featureName: string, value: string) {
+    const homePage = new HomePage(this.page);
+    await retryInteraction(async () => {
+        await homePage.filterBar.filterByFeature(featureName, value);
+    }, { maxAttempts: 3, errorMessage: `Failed to filter by ${featureName}: ${value}` });
+});

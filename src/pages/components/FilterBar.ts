@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { step } from 'allure-js-commons';
 
 export class FilterBar {
     readonly page: Page;
@@ -8,33 +9,55 @@ export class FilterBar {
     }
 
     async filterByBrand(brandSlug: string) {
-        const brandFilter = this.page.locator(`a[href*="/dien-thoai/${brandSlug}"]`).first();
-        if (await brandFilter.isVisible()) {
-            await brandFilter.click();
-        } else {
-            console.log(`Brand filter for ${brandSlug} not visible`);
-        }
+        await step(`Click brand filter: ${brandSlug}`, async () => {
+            // Updated locator to be more specific if possible, but href is key
+            const brandFilter = this.page.locator(`a[href*="/dien-thoai/${brandSlug}"]`).first();
+
+            // Try to scroll into view first (for carousels)
+            if (await brandFilter.count() > 0) {
+                await brandFilter.scrollIntoViewIfNeeded();
+            }
+
+            if (await brandFilter.isVisible()) {
+                await brandFilter.click();
+            } else {
+                console.log(`Brand filter for ${brandSlug} not visible. Checking expandable options...`);
+                // Future: Add logic to open "See more" if needed
+            }
+        });
     }
 
     async filterByPrice(priceParam: string) {
-        // Direct navigation strategy as used in original tests for stability
-        // But in a real component, this might click a dropdown. 
-        // Since we are migrating, let's keep the logic but maybe expose it as a navigation helper in the Page, 
-        // or if it's a UI interaction, put it here.
-        // The original test used `page.goto` for price because of complexity.
-        // Let's assume for H-POM we want to try UI interaction if possible, but fallback to URL for now to match previous stability.
-        // Actually, the previous POM `FptShopPage` used `navigate`.
-        // Let's keep this method here but it might need to interact with the Page object to navigate.
-        // Ideally components shouldn't do full page navigation, but for filters it's often a reload.
+        await step(`Filter by price param: ${priceParam}`, async () => {
+            const currentUrl = this.page.url();
+            const separator = currentUrl.includes('?') ? '&' : '?';
+            const targetUrl = `${currentUrl}${separator}gia=${priceParam}`;
 
-        // For H-POM purity, let's assume this component *should* find the element.
-        // If we stick to the previous logic of "goto", it belongs more in the Page controller or a specific "Navigation" helper.
-        // However, to keep it simple and working:
-        const currentUrl = this.page.url();
-        if (currentUrl.includes('?')) {
-            await this.page.goto(`${currentUrl}&gia=${priceParam}`);
-        } else {
-            await this.page.goto(`${currentUrl}?gia=${priceParam}`);
-        }
+            await step(`Navigate to: ${targetUrl}`, async () => {
+                await this.page.goto(targetUrl);
+            });
+        });
+    }
+    async sortBy(criteria: string) {
+        await step(`Sort by: ${criteria}`, async () => {
+            const sortOption = this.page.locator(`span`).filter({ hasText: criteria }).first();
+            if (await sortOption.isVisible()) {
+                await sortOption.click();
+            } else {
+                throw new Error(`Sort option "${criteria}" not found`);
+            }
+        });
+    }
+
+    async filterByFeature(featureName: string, value: string) {
+        await step(`Filter by ${featureName}: ${value}`, async () => {
+            const option = this.page.locator(`label`).filter({ hasText: value }).first();
+            if (await option.count() > 0) {
+                await option.scrollIntoViewIfNeeded();
+                await option.check(); // Use check if it's a checkbox/label pair, or click
+            } else {
+                throw new Error(`Filter option "${value}" for "${featureName}" not found`);
+            }
+        });
     }
 }
