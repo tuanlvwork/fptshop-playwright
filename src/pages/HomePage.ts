@@ -27,6 +27,6 @@ export class HomePage extends BasePage {
     }
 
     async verifyUrlContains(text: string) {
-        await expect(this.page).toHaveURL(new RegExp(text));
+        await expect(this.page).toHaveURL(new RegExp(text), { timeout: 30000 });
     }
 }
