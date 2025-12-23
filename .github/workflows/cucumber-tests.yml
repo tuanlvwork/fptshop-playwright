@@ -262,15 +262,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         pattern: allure-results-cucumber-*
-        merge-multiple: true
-        path: allure-results
+        merge-multiple: false
+        path: allure-results-blobs
 
     - name: Debug - List downloaded Allure results
       run: |
         echo "=== Downloaded Allure Results ==="
-        ls -la allure-results/ || echo "Directory not found"
-        echo "Total JSON files: $(find allure-results -name '*.json' -type f 2>/dev/null | wc -l)"
-        echo "Total files: $(find allure-results -type f 2>/dev/null | wc -l)"
+        ls -R allure-results-blobs/ || echo "Directory not found"
 
     - name: Install Allure Commandline
       run: npm install -g allure-commandline
@@ -285,40 +283,25 @@ jobs:
 
     - name: Generate Allure Report
       run: |
-        if [ -d "allure-results" ] && [ "$(ls -A allure-results 2>/dev/null)" ]; then
-          # 1. Prepare History
-          if [ -d "allure-history" ]; then
-            echo "📜 found previous history, copying to results..."
-            mkdir -p allure-results/history
-            cp -r allure-history/* allure-results/history/ || true
-          fi
+        # 1. Prepare History for the script
+        # The script expects previous history in 'allure-report/history'
+        mkdir -p allure-report/history
+        if [ -d "allure-history" ] && [ "$(ls -A allure-history)" ]; then
+          echo "📜 restoring cached history..."
+          cp -r allure-history/* allure-report/history/
+        fi
 
-          # 2. Generate Standard Report (to compute new trends)
-          echo "Generating standard report to compute trends..."
-          allure generate allure-results --clean -o allure-report
-          
-          # 3. Preserve New History & 4. Update Results
-          if [ -d "allure-report/history" ]; then
-            echo "Saving new history..."
-            mkdir -p allure-history
-            cp -r allure-report/history/* allure-history/
-            
-            echo "Updating results with new history for single-file report..."
-            mkdir -p allure-results/history
-            cp -r allure-report/history/* allure-results/history/
-          else
-            echo "⚠️ No history generated in this run (possibly first run or no results)."
-          fi
+        # 2. Run the Node Script
+        # This handles: Shard merging, Categories, Standard Report, and Single-File Report
+        node scripts/generate-allure-report.js
 
-          # 5. Generate Single-File Report
-          echo "Generating single-file Allure report..."
-          allure generate allure-results --clean --single-file -o allure-report-single
-          
-          echo "✅ Reports generated"
-        else
-          echo "No Allure results found, creating empty report placeholder"
-          mkdir -p allure-report-single
-          echo "<html><body><h1>No test results available</h1></body></html>" > allure-report-single/index.html
+        # 3. Update Cache Source
+        # The script generated new history in 'allure-report/history'.
+        # We copy it back to 'allure-history' so the cache action saves the LATEST trends.
+        if [ -d "allure-report/history" ]; then
+          echo "🔄 Updating history cache..."
+          rm -rf allure-history/*
+          cp -r allure-report/history/* allure-history/
         fi
 
     - name: Upload Single-File Report
