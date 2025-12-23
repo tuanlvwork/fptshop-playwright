@@ -326,7 +326,8 @@ jobs:
         # We copy it back to 'allure-history' so the cache action saves the LATEST trends.
         if [ -d "allure-report/history" ]; then
           echo "🔄 Updating history cache..."
-          rm -rf allure-history/*
+          mkdir -p allure-history
+          rm -rf allure-history/* 2>/dev/null || true
           cp -r allure-report/history/* allure-history/
         fi
 
