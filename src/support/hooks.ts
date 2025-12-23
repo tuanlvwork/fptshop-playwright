@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getDiagnostics, DiagnosticsService } from '../utils/diagnostics';
 import { generateAllureEnvironment, generateAllureExecutor } from '../utils/allure-helpers';
+import * as allure from 'allure-js-commons';
 
 setDefaultTimeout(config.defaultTimeout);
 
@@ -67,6 +68,40 @@ AfterAll(async function () {
 Before(async function (this: CustomWorld, scenario) {
     this.testMetadata.startTime = Date.now();
     this.testMetadata.scenarioName = scenario.pickle.name;
+
+    // Add Allure parameters for Scenario Outline examples
+    // This makes each example row unique in Allure reports
+    try {
+        // Extract parameters from the scenario (these come from Examples table)
+        const params: Record<string, string> = {};
+
+        // Get step arguments that contain example values
+        scenario.pickle.steps.forEach((step: any) => {
+            // Extract values from step text using common patterns
+            const matches = step.text.match(/"([^"]+)"/g);
+            if (matches) {
+                matches.forEach((match: string, index: number) => {
+                    const value = match.replace(/"/g, '');
+                    params[`param_${index + 1}`] = value;
+                });
+            }
+        });
+
+        // Add unique ID based on scenario name + all parameters
+        const uniqueId = `${scenario.pickle.name}_${Object.values(params).join('_')}`;
+
+        // Set Allure labels and parameters
+        if (Object.keys(params).length > 0) {
+            // Add each parameter to Allure
+            for (const [key, value] of Object.entries(params)) {
+                await allure.parameter(key, value);
+            }
+            // Add a unique testId label
+            await allure.label('testId', uniqueId);
+        }
+    } catch (e) {
+        // Silently ignore if Allure runtime is not available
+    }
 
     this.context = await browser.newContext({
         baseURL: config.baseUrl,
