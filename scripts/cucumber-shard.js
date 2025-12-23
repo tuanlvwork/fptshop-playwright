@@ -76,6 +76,8 @@ const cucumberArgs = [
 // Add Allure formatter if enabled
 if (enableAllure) {
     cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
+    // CRITICAL: Pass formatOptions to tell allure-cucumberjs where to write results
+    cucumberArgs.push('--format-options', JSON.stringify({ resultsDir: resultsPath }));
 }
 
 let tagsForEnv = '';
