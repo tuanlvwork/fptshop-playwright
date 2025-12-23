@@ -147,23 +147,7 @@ jobs:
           cucumber-report-${{ matrix.shardIndex }}.json
         retention-days: 1
 
-    - name: Debug Allure Results
-      if: always()
-      run: |
-        echo "=== Allure Results Debug ==="
-        echo "Current directory: $(pwd)"
-        echo "Directory listing:"
-        ls -la
-        echo ""
-        echo "Checking allure-results directory:"
-        if [ -d "allure-results" ]; then
-          echo "allure-results exists"
-          ls -la allure-results/ | head -20
-          echo "JSON files: $(find allure-results -name '*.json' -type f | wc -l)"
-          echo "Total files: $(find allure-results -type f | wc -l)"
-        else
-          echo "allure-results directory does NOT exist!"
-        fi
+
 
     - name: Upload Allure Results
       uses: actions/upload-artifact@v4
@@ -265,10 +249,7 @@ jobs:
         merge-multiple: false
         path: allure-results-blobs
 
-    - name: Debug - List downloaded Allure results
-      run: |
-        echo "=== Downloaded Allure Results ==="
-        ls -R allure-results-blobs/ || echo "Directory not found"
+
 
     - name: Install Allure Commandline
       run: npm install -g allure-commandline
