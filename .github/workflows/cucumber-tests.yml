@@ -299,37 +299,10 @@ jobs:
     - name: Install Allure Commandline
       run: npm install -g allure-commandline
 
-    - name: Load Allure History
-      uses: actions/cache@v4
-      with:
-        path: allure-history
-        key: allure-history-${{ runner.os }}-${{ github.run_id }}
-        restore-keys: |
-          allure-history-${{ runner.os }}-
-
     - name: Generate Allure Report
       run: |
-        # 1. Prepare History for the script
-        # The script expects previous history in 'allure-report/history'
-        mkdir -p allure-report/history
-        if [ -d "allure-history" ] && [ "$(ls -A allure-history)" ]; then
-          echo "📜 restoring cached history..."
-          cp -r allure-history/* allure-report/history/
-        fi
-
-        # 2. Run the Node Script
-        # This handles: Shard merging, Categories, Standard Report, and Single-File Report
+        # Run the Node Script (handles: Shard merging, Categories, Report generation)
         node scripts/generate-allure-report.js
-
-        # 3. Update Cache Source
-        # The script generated new history in 'allure-report/history'.
-        # We copy it back to 'allure-history' so the cache action saves the LATEST trends.
-        if [ -d "allure-report/history" ]; then
-          echo "🔄 Updating history cache..."
-          mkdir -p allure-history
-          rm -rf allure-history/* 2>/dev/null || true
-          cp -r allure-report/history/* allure-history/
-        fi
 
     - name: Upload Single-File Report
       uses: actions/upload-artifact@v4

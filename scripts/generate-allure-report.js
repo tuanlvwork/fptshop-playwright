@@ -228,39 +228,14 @@ try {
         fs.copyFileSync(categoriesSource, categoriesDest);
     }
 
-    // 4. Preserve History
-    const historySource = path.join(reportDir, 'history');
-    const historyDest = path.join(resultsDir, 'history');
-
-    if (fs.existsSync(historySource)) {
-        console.log('📜 Preserving history...');
-        if (!fs.existsSync(historyDest)) fs.mkdirSync(historyDest, { recursive: true });
-
-        fs.readdirSync(historySource).forEach(file => {
-            fs.copyFileSync(path.join(historySource, file), path.join(historyDest, file));
-        });
-    }
-
-    // 5. Generate Standard Report
+    // 4. Generate Standard Report (no history for now - debugging)
     execSync(`npx allure generate ${resultsDir} --clean -o ${reportDir}`, { stdio: 'inherit' });
 
-    // 6. Update Results with New History
-    const newHistorySource = path.join(reportDir, 'history');
-    const resultsHistoryPath = path.join(resultsDir, 'history');
-
-    if (fs.existsSync(newHistorySource)) {
-        if (!fs.existsSync(resultsHistoryPath)) fs.mkdirSync(resultsHistoryPath, { recursive: true });
-
-        fs.readdirSync(newHistorySource).forEach(file => {
-            fs.copyFileSync(path.join(newHistorySource, file), path.join(resultsHistoryPath, file));
-        });
-    }
-
-    // 7. Generate Single-File Report
+    // 5. Generate Single-File Report
     const singleFileDir = path.join(__dirname, '../allure-report-single');
     execSync(`npx allure generate ${resultsDir} --clean --single-file -o ${singleFileDir}`, { stdio: 'inherit' });
 
-    // 8. Copy alias
+    // 6. Copy alias
     fs.copyFileSync(path.join(singleFileDir, 'index.html'), path.join(reportDir, 'complete-report.html'));
 
     console.log('✅ Reports generated successfully!');
