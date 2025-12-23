@@ -249,7 +249,22 @@ jobs:
         merge-multiple: false
         path: allure-results-blobs
 
-
+    - name: Debug - Inspect downloaded artifacts structure
+      run: |
+        echo "=== Top-level allure-results-blobs ==="
+        ls -la allure-results-blobs/ || echo "Directory not found"
+        echo ""
+        echo "=== Full tree structure (3 levels) ==="
+        find allure-results-blobs -maxdepth 3 -type d | head -30
+        echo ""
+        echo "=== File counts per subdirectory ==="
+        for dir in allure-results-blobs/*/; do
+          count=$(find "$dir" -type f -name "*.json" 2>/dev/null | wc -l)
+          echo "$dir: $count JSON files"
+        done
+        echo ""
+        echo "=== Sample file paths ==="
+        find allure-results-blobs -name "*.json" -type f | head -10
 
     - name: Install Allure Commandline
       run: npm install -g allure-commandline
@@ -289,6 +304,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: allure-report-cucumber
-        path: allure-report-single/index.html
+        path: allure-report/complete-report.html
         retention-days: 30
         if-no-files-found: warn

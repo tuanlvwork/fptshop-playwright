@@ -23,6 +23,23 @@ if (fs.existsSync(blobsDir)) {
         let totalFiles = 0;
         let processedShards = 0;
 
+        // Helper function to copy JSON files from a source directory
+        const copyFilesFromDir = (sourceDir, shardPrefix) => {
+            let count = 0;
+            const files = fs.readdirSync(sourceDir);
+            files.forEach(file => {
+                const src = path.join(sourceDir, file);
+                if (fs.statSync(src).isFile()) {
+                    // Prefix file with shard name to GUARANTEE uniqueness
+                    const destName = `${shardPrefix}_${file}`;
+                    const dest = path.join(resultsDir, destName);
+                    fs.copyFileSync(src, dest);
+                    count++;
+                }
+            });
+            return count;
+        };
+
         shards.forEach(shard => {
             const shardPath = path.join(blobsDir, shard);
 
@@ -31,30 +48,32 @@ if (fs.existsSync(blobsDir)) {
 
             if (fs.statSync(shardPath).isDirectory()) {
                 processedShards++;
-                const files = fs.readdirSync(shardPath);
-                console.log(`   ➡️  Processing ${shard} (${files.length} files)`);
+                console.log(`   ➡️  Processing shard: ${shard}`);
 
-                files.forEach(file => {
-                    const src = path.join(shardPath, file);
-                    if (fs.statSync(src).isDirectory()) return;
+                // Check for nested 'allure-results' directory (common with download-artifact)
+                const nestedPath = path.join(shardPath, 'allure-results');
+                const actualPath = fs.existsSync(nestedPath) ? nestedPath : shardPath;
 
-                    // Prefix file with shard name to GUARANTEE uniqueness
-                    // This prevents overwrites even if Allure/Cucumber reused IDs
-                    const destName = `${shard}_${file}`;
-                    const dest = path.join(resultsDir, destName);
+                if (actualPath !== shardPath) {
+                    console.log(`      📂 Found nested 'allure-results' directory`);
+                }
 
-                    fs.copyFileSync(src, dest);
-                    totalFiles++;
-                });
+                const filesInDir = fs.readdirSync(actualPath);
+                console.log(`      📄 Files found: ${filesInDir.length}`);
+
+                const copiedCount = copyFilesFromDir(actualPath, shard);
+                totalFiles += copiedCount;
+                console.log(`      ✅ Copied ${copiedCount} files`);
             }
         });
-        console.log(`✅ Merged ${totalFiles} files from ${processedShards} shards into ${resultsDir}`);
+        console.log(`\n✅ Merged ${totalFiles} files from ${processedShards} shards into ${resultsDir}`);
     } catch (mergeError) {
         console.error('❌ Error merging sharded results:', mergeError.message);
+        console.error(mergeError.stack);
     }
 } else {
     // If running locally without shards, checking standard location
-    console.log(`   No shards found. Using existing contents of allure-results.`);
+    console.log(`   No shards found at ${blobsDir}. Using existing contents of allure-results.`);
 }
 
 // 1. Validate Results
