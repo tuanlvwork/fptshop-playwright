@@ -37,6 +37,15 @@ try {
         execSync('npm install -g allure-commandline --save-dev', { stdio: 'inherit' });
     }
 
+    // Copy categories.json to results directory for failure analysis
+    const categoriesSource = path.join(__dirname, '../allure-categories.json');
+    const categoriesDest = path.join(resultsDir, 'categories.json');
+
+    if (fs.existsSync(categoriesSource)) {
+        console.log('📋 Copying custom categories definition...');
+        fs.copyFileSync(categoriesSource, categoriesDest);
+    }
+
     // Preserve history for Trend charts
     // 1. Check if previous history exists
     const historySource = path.join(reportDir, 'history');
