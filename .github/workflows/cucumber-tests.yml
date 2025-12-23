@@ -105,10 +105,16 @@ jobs:
     # Note: Playwright browsers and dependencies are pre-installed in the Docker container
     # No need for separate install steps!
 
+    - name: Clean Allure results (ensure no cached data)
+      run: |
+        rm -rf allure-results || true
+        mkdir -p allure-results
+        echo "Cleaned allure-results directory for shard ${{ matrix.shardIndex }}"
+
     - name: Run Cucumber tests
       run: |
         echo "ENABLE_ALLURE=$ENABLE_ALLURE"
-        echo "Running shard tests..."
+        echo "Running shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }} tests..."
         echo "Tags input: ${{ github.event.inputs.tags }}"
         TAGS_ARG=""
         if [ "${{ github.event.inputs.tags }}" != "all" ] && [ -n "${{ github.event.inputs.tags }}" ]; then
@@ -116,6 +122,13 @@ jobs:
         fi
         echo "TAGS_ARG: $TAGS_ARG"
         npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG
+        
+        # Log what was generated
+        echo ""
+        echo "=== Allure results for shard ${{ matrix.shardIndex }} ==="
+        ls -la allure-results/ | head -20 || echo "No allure-results found"
+        RESULT_COUNT=$(find allure-results -name "*-result.json" 2>/dev/null | wc -l)
+        echo "Total result files: $RESULT_COUNT"
       env:
         ENABLE_ALLURE: 'true'
 
@@ -263,8 +276,25 @@ jobs:
           echo "$dir: $count JSON files"
         done
         echo ""
-        echo "=== Sample file paths ==="
-        find allure-results-blobs -name "*.json" -type f | head -10
+        echo "=== Sample result files from each shard (checking for duplicates) ==="
+        for dir in allure-results-blobs/*/; do
+          echo "--- $dir ---"
+          # Show first 3 result files with their names (not full path)
+          find "$dir" -name "*-result.json" -type f 2>/dev/null | head -3 | xargs -I {} basename {}
+        done
+        echo ""
+        echo "=== Checking if same files exist in multiple shards ==="
+        # Get first result file from shard 1
+        SAMPLE_FILE=$(find allure-results-blobs/allure-results-cucumber-1/ -name "*-result.json" -type f 2>/dev/null | head -1 | xargs basename 2>/dev/null)
+        if [ -n "$SAMPLE_FILE" ]; then
+          echo "Sample file: $SAMPLE_FILE"
+          echo "Found in shards:"
+          for dir in allure-results-blobs/*/; do
+            if [ -f "$dir$SAMPLE_FILE" ] || [ -f "${dir}allure-results/$SAMPLE_FILE" ]; then
+              echo "  ✓ Found in: $dir"
+            fi
+          done
+        fi
 
     - name: Install Allure Commandline
       run: npm install -g allure-commandline

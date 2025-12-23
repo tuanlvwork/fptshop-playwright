@@ -61,6 +61,12 @@ if (fs.existsSync(blobsDir)) {
                 const filesInDir = fs.readdirSync(actualPath);
                 console.log(`      📄 Files found: ${filesInDir.length}`);
 
+                // Show sample files for debugging (first 3 result files)
+                const sampleResults = filesInDir.filter(f => f.endsWith('-result.json')).slice(0, 3);
+                if (sampleResults.length > 0) {
+                    console.log(`      🔍 Sample result files: ${sampleResults.join(', ')}`);
+                }
+
                 const copiedCount = copyFilesFromDir(actualPath, shard);
                 totalFiles += copiedCount;
                 console.log(`      ✅ Copied ${copiedCount} files`);
