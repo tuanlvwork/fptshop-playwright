@@ -9,66 +9,74 @@ const blobsDir = path.join(__dirname, '../allure-results-blobs'); // Temp dir fo
 console.log('🔍 Checking for Allure results...');
 
 // 0. Merge Sharded Results (if they exist in blobsDir)
-// This fixes the issue where shards overwrite each other if merge-multiple: true is used with identical filenames
 if (fs.existsSync(blobsDir)) {
-    console.log('📦 Found sharded results in allure-results-blobs. Merging...');
+    console.log(`📦 Found 'allure-results-blobs' directory. Listing contents...`);
+    // Ensure results dir exists
     if (!fs.existsSync(resultsDir)) {
         fs.mkdirSync(resultsDir, { recursive: true });
     }
 
     try {
         const shards = fs.readdirSync(blobsDir);
+        console.log(`   Found ${shards.length} items: ${JSON.stringify(shards)}`);
+
         let totalFiles = 0;
+        let processedShards = 0;
 
         shards.forEach(shard => {
             const shardPath = path.join(blobsDir, shard);
-            // Verify it is a directory (it should be, e.g., allure-results-cucumber-1)
+
+            // Skip hidden files or system files
+            if (shard.startsWith('.')) return;
+
             if (fs.statSync(shardPath).isDirectory()) {
+                processedShards++;
                 const files = fs.readdirSync(shardPath);
+                console.log(`   ➡️  Processing ${shard} (${files.length} files)`);
+
                 files.forEach(file => {
                     const src = path.join(shardPath, file);
-                    let dest = path.join(resultsDir, file);
+                    if (fs.statSync(src).isDirectory()) return;
 
-                    // Handle Collisions by renaming
-                    if (fs.existsSync(dest)) {
-                        const ext = path.extname(file);
-                        const name = path.basename(file, ext);
-                        const timestamp = Date.now();
-                        // Append shard name and timestamp to ensure uniqueness
-                        dest = path.join(resultsDir, `${name}_${shard}_${timestamp}${ext}`);
-                        console.warn(`⚠️  Collision detected for ${file}. Renamed to ${path.basename(dest)}`);
-                    }
+                    // Prefix file with shard name to GUARANTEE uniqueness
+                    // This prevents overwrites even if Allure/Cucumber reused IDs
+                    const destName = `${shard}_${file}`;
+                    const dest = path.join(resultsDir, destName);
 
                     fs.copyFileSync(src, dest);
                     totalFiles++;
                 });
             }
         });
-        console.log(`✅ Merged ${totalFiles} files from ${shards.length} shards into ${resultsDir}`);
+        console.log(`✅ Merged ${totalFiles} files from ${processedShards} shards into ${resultsDir}`);
     } catch (mergeError) {
         console.error('❌ Error merging sharded results:', mergeError.message);
-        // Continue, as there might be files in resultsDir anyway if run locally
     }
+} else {
+    // If running locally without shards, checking standard location
+    console.log(`   No shards found. Using existing contents of allure-results.`);
 }
 
-// 1. Validate Results Existence
+// 1. Validate Results
 if (!fs.existsSync(resultsDir)) {
     console.error('❌ No allure-results directory found!');
-    console.log('\n💡 Run tests first with Allure enabled:');
-    console.log('   ENABLE_ALLURE=true npm test');
+    console.log('💡 Run tests first with ENABLE_ALLURE=true');
     process.exit(1);
 }
 
 const files = fs.readdirSync(resultsDir);
 const jsonFiles = files.filter(f => f.endsWith('.json') || f.endsWith('-result.json'));
 
-if (files.length === 0) {
-    console.error('❌ No Allure results found!');
+console.log(`\n📊 Allure Results Status:`);
+console.log(`   Total Files: ${files.length}`);
+console.log(`   JSON Result Files: ${jsonFiles.length}`);
+
+if (jsonFiles.length === 0) {
+    console.error('❌ No Allure JSON results found!');
     process.exit(1);
 }
 
-console.log(`✅ Found ${files.length} Allure result files (${jsonFiles.length} JSON files)\n`);
-console.log('📊 Generating Allure Report...\n');
+console.log('\n🚀 Generating Allure Report...\n');
 
 try {
     // 2. Install Allure CLI if missing
@@ -84,68 +92,48 @@ try {
     const categoriesDest = path.join(resultsDir, 'categories.json');
 
     if (fs.existsSync(categoriesSource)) {
-        console.log('📋 Copying custom categories definition...');
+        console.log('📋 Copying categories definition');
         fs.copyFileSync(categoriesSource, categoriesDest);
     }
 
-    // 4. Preserve History for Trends
+    // 4. Preserve History
     const historySource = path.join(reportDir, 'history');
     const historyDest = path.join(resultsDir, 'history');
 
     if (fs.existsSync(historySource)) {
-        console.log('📜 Found previous history. Preserving for Trend chart...');
-        if (!fs.existsSync(historyDest)) {
-            fs.mkdirSync(historyDest, { recursive: true });
-        }
+        console.log('📜 Preserving history...');
+        if (!fs.existsSync(historyDest)) fs.mkdirSync(historyDest, { recursive: true });
 
-        const historyFiles = fs.readdirSync(historySource);
-        historyFiles.forEach(file => {
-            fs.copyFileSync(
-                path.join(historySource, file),
-                path.join(historyDest, file)
-            );
+        fs.readdirSync(historySource).forEach(file => {
+            fs.copyFileSync(path.join(historySource, file), path.join(historyDest, file));
         });
-        console.log(`   Copied ${historyFiles.length} history files.`);
     }
 
     // 5. Generate Standard Report
-    execSync(`npx allure generate ${resultsDir} --clean -o ${reportDir}`, {
-        stdio: 'inherit'
-    });
-    console.log('\n✅ Standard report generated (with history preservation)!');
+    execSync(`npx allure generate ${resultsDir} --clean -o ${reportDir}`, { stdio: 'inherit' });
 
-    // 6. Update Results with New History (for single-file report)
+    // 6. Update Results with New History
     const newHistorySource = path.join(reportDir, 'history');
     const resultsHistoryPath = path.join(resultsDir, 'history');
 
     if (fs.existsSync(newHistorySource)) {
-        if (!fs.existsSync(resultsHistoryPath)) {
-            fs.mkdirSync(resultsHistoryPath, { recursive: true });
-        }
+        if (!fs.existsSync(resultsHistoryPath)) fs.mkdirSync(resultsHistoryPath, { recursive: true });
 
-        const newHistoryFiles = fs.readdirSync(newHistorySource);
-        newHistoryFiles.forEach(file => {
+        fs.readdirSync(newHistorySource).forEach(file => {
             fs.copyFileSync(path.join(newHistorySource, file), path.join(resultsHistoryPath, file));
         });
-        console.log('   Updated results with latest history for single-file report.');
     }
 
     // 7. Generate Single-File Report
     const singleFileDir = path.join(__dirname, '../allure-report-single');
-    execSync(`npx allure generate ${resultsDir} --clean --single-file -o ${singleFileDir}`, {
-        stdio: 'inherit'
-    });
+    execSync(`npx allure generate ${resultsDir} --clean --single-file -o ${singleFileDir}`, { stdio: 'inherit' });
 
-    // 8. Copy to main report folder (optional alias)
-    fs.copyFileSync(
-        path.join(singleFileDir, 'index.html'),
-        path.join(reportDir, 'complete-report.html')
-    );
-    console.log('✅ Single-file report generated!');
+    // 8. Copy alias
+    fs.copyFileSync(path.join(singleFileDir, 'index.html'), path.join(reportDir, 'complete-report.html'));
 
-    console.log('\n📂 Reports generated:');
-    console.log(`   Standard: ${reportDir}/index.html`);
-    console.log(`   Portable: ${reportDir}/complete-report.html`);
+    console.log('✅ Reports generated successfully!');
+    console.log(`   ${reportDir}/complete-report.html`);
+
 } catch (error) {
     console.error('\n❌ Error generating Allure report:', error.message);
     process.exit(1);
