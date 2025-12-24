@@ -60,25 +60,18 @@ if (enableAllure) {
     console.log(`Allure enabled, results will be written to: ${resultsPath}`);
 }
 
-// Build cucumber arguments - use profile 'shard' which has the common settings
-// The profile already includes the Allure formatter when ENABLE_ALLURE is set
+// Build cucumber arguments - use profile 'shard' to avoid default profile's paths
+// The shard profile provides request/require-module config but does not include 'paths', ensuring only specific files run
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
-    '--require-module', 'ts-node/register',
-    '--require-module', 'tsconfig-paths/register',
-    '--require', 'src/steps/*.ts',
-    '--require', 'src/support/*.ts',
+    '--profile', 'shard',
     '--format', 'progress', // Use progress instead of progress-bar for CI
     '--format', `html:${reportFileHtml}`,
     '--format', `json:${reportFileJson}`,
 ];
 
-// Add Allure formatter if enabled
-if (enableAllure) {
-    cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
-    // CRITICAL: Pass formatOptions to tell allure-cucumberjs where to write results
-    cucumberArgs.push('--format-options', JSON.stringify({ resultsDir: resultsPath }));
-}
+// Allure formatter is now handled by the 'shard' profile in cucumber.js
+// We do not need to add it manually here to avoid duplication.
 
 let tagsForEnv = '';
 
