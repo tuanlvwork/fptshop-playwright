@@ -262,40 +262,6 @@ jobs:
         merge-multiple: false
         path: allure-results-blobs
 
-    - name: Debug - Inspect downloaded artifacts structure
-      run: |
-        echo "=== Top-level allure-results-blobs ==="
-        ls -la allure-results-blobs/ || echo "Directory not found"
-        echo ""
-        echo "=== Full tree structure (3 levels) ==="
-        find allure-results-blobs -maxdepth 3 -type d | head -30
-        echo ""
-        echo "=== File counts per subdirectory ==="
-        for dir in allure-results-blobs/*/; do
-          count=$(find "$dir" -type f -name "*.json" 2>/dev/null | wc -l)
-          echo "$dir: $count JSON files"
-        done
-        echo ""
-        echo "=== Sample result files from each shard (checking for duplicates) ==="
-        for dir in allure-results-blobs/*/; do
-          echo "--- $dir ---"
-          # Show first 3 result files with their names (not full path)
-          find "$dir" -name "*-result.json" -type f 2>/dev/null | head -3 | xargs -I {} basename {}
-        done
-        echo ""
-        echo "=== Checking if same files exist in multiple shards ==="
-        # Get first result file from shard 1
-        SAMPLE_FILE=$(find allure-results-blobs/allure-results-cucumber-1/ -name "*-result.json" -type f 2>/dev/null | head -1 | xargs basename 2>/dev/null)
-        if [ -n "$SAMPLE_FILE" ]; then
-          echo "Sample file: $SAMPLE_FILE"
-          echo "Found in shards:"
-          for dir in allure-results-blobs/*/; do
-            if [ -f "$dir$SAMPLE_FILE" ] || [ -f "${dir}allure-results/$SAMPLE_FILE" ]; then
-              echo "  ✓ Found in: $dir"
-            fi
-          done
-        fi
-
     - name: Install Allure Commandline
       run: npm install -g allure-commandline
 
