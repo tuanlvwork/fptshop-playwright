@@ -75,8 +75,14 @@ const cucumberArgs = [
     '--format', `json:${reportFileJson}`,
 ];
 
-// Allure formatter is now handled by the 'shard' profile in cucumber.js
-// We do not need to add it manually here to avoid duplication.
+// Add Allure formatter if enabled
+// We add it manually because the 'shard' profile in cucumber.js might not effectively load it
+// if the environment variable resolution differs in the child process.
+if (enableAllure) {
+    cucumberArgs.push('--format', 'allure-cucumberjs/reporter');
+    // CRITICAL: Pass formatOptions to tell allure-cucumberjs where to write results
+    cucumberArgs.push('--format-options', JSON.stringify({ resultsDir: resultsPath }));
+}
 
 let tagsForEnv = '';
 
