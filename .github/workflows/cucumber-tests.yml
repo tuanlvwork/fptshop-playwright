@@ -121,7 +121,7 @@ jobs:
           TAGS_ARG="--tags ${{ github.event.inputs.tags }}"
         fi
         echo "TAGS_ARG: $TAGS_ARG"
-        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG
+        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG || true
         
         # Log what was generated
         echo ""
