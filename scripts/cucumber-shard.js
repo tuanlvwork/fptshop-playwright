@@ -108,6 +108,7 @@ console.log(`Running command: npx cucumber-js ${cucumberArgs.join(' ')}`);
 const childEnv = {
     ...process.env,
     ALLURE_RESULTS_DIR: resultsPath,
+    ALLURE_OUTPUT_DIR: resultsPath, // Ensure both vars point to the absolute path
     ALLURE_TAGS: tagsForEnv || process.env.TAGS || 'None',
 };
 
