@@ -112,12 +112,24 @@ const options = {
         "Browser": "Chrome",
         "Platform": process.platform,
         "Parallel": "Scenarios",
-        "Executed": "Remote"
+        "Executed": "Remote",
     },
     failedSummaryReport: false,
     storeScreenshots: true,
     noInlineScreenshots: false,
 };
+
+// Calculate Workflow Duration if START_TIME is provided
+if (process.env.START_TIME) {
+    const startTime = parseInt(process.env.START_TIME, 10);
+    const endTime = Math.floor(Date.now() / 1000);
+    const durationSeconds = endTime - startTime;
+
+    const minutes = Math.floor(durationSeconds / 60);
+    const seconds = durationSeconds % 60;
+
+    options.metadata["Workflow Duration"] = `${minutes}m ${seconds}s`;
+}
 
 reporter.generate(options);
 console.log('HTML Report generated successfully.');

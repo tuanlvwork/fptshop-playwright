@@ -33,7 +33,11 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       shardTotal: ${{ steps.set-matrix.outputs.shardTotal }}
       parallelWorkers: ${{ steps.set-matrix.outputs.parallelWorkers }}
+      startTime: ${{ steps.get-timestamp.outputs.startTime }}
     steps:
+      - id: get-timestamp
+        run: echo "startTime=$(date +%s)" >> $GITHUB_OUTPUT
+
       - id: set-matrix
         run: |
           count=${{ inputs.shardTotal }}
@@ -173,7 +177,7 @@ jobs:
 
   merge-reports:
     if: always()
-    needs: [test]
+    needs: [setup, test]
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
@@ -221,6 +225,8 @@ jobs:
         path: all-cucumber-reports
 
     - name: Merge reports
+      env:
+        START_TIME: ${{ needs.setup.outputs.startTime }}
       run: node scripts/merge-cucumber-reports.js
 
     - name: Capture Report Screenshot
