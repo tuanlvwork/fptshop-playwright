@@ -41,9 +41,8 @@ module.exports = {
         paths: ['features/*.feature'],
         publish: false,
     },
-    // Shard profile for CI
+    // Shard profile for CI - minimal config, expects explicit args for require/paths
     shard: {
-        ...common,
         retry: retries,
         format: [
             'progress',

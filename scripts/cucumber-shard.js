@@ -65,6 +65,11 @@ if (enableAllure) {
 const cucumberArgs = [
     ...filesToRun, // Pass specific files
     '--profile', 'shard',
+    // Explicitly pass require/module to ensure they work in CI environment
+    '--require-module', 'ts-node/register',
+    '--require-module', 'tsconfig-paths/register',
+    '--require', 'src/steps/*.ts',
+    '--require', 'src/support/*.ts',
     '--format', 'progress', // Use progress instead of progress-bar for CI
     '--format', `html:${reportFileHtml}`,
     '--format', `json:${reportFileJson}`,
