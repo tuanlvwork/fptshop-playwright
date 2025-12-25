@@ -19,11 +19,28 @@ if (!shardIndex || !shardTotal) {
 
 const featuresDir = path.join(__dirname, '../features');
 
-// Simple flat directory check. If recursive is needed, use a glob library or recursive function.
-const allFiles = fs.readdirSync(featuresDir)
-    .filter(file => file.endsWith('.feature'))
-    .sort() // Deterministic order
-    .map(file => path.join('features', file));
+// Recursive function to find all .feature files in subdirectories
+function findFeatureFiles(dir, baseDir = '') {
+    let results = [];
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const item of items) {
+        const fullPath = path.join(dir, item.name);
+        const relativePath = path.join(baseDir, item.name);
+
+        if (item.isDirectory()) {
+            // Recursively search subdirectories
+            results = results.concat(findFeatureFiles(fullPath, relativePath));
+        } else if (item.isFile() && item.name.endsWith('.feature')) {
+            results.push(path.join('features', relativePath));
+        }
+    }
+
+    return results;
+}
+
+// Find all feature files recursively and sort for deterministic sharding
+const allFiles = findFeatureFiles(featuresDir).sort();
 
 const filesToRun = allFiles.filter((_, index) => (index % shardTotal) + 1 === shardIndex);
 
@@ -68,7 +85,8 @@ const cucumberArgs = [
     // Explicitly pass require/module to ensure they work in CI environment
     '--require-module', 'ts-node/register',
     '--require-module', 'tsconfig-paths/register',
-    '--require', 'src/steps/*.ts',
+    // Use glob patterns that include subdirectories
+    '--require', 'src/steps/**/*.ts',
     '--require', 'src/support/*.ts',
     '--format', 'progress', // Use progress instead of progress-bar for CI
     '--format', `html:${reportFileHtml}`,

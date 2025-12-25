@@ -1,6 +1,6 @@
 import { Before, After, AfterStep, BeforeStep, BeforeAll, AfterAll, setDefaultTimeout, Status } from '@cucumber/cucumber';
 import { chromium, Browser } from '@playwright/test';
-import { CustomWorld } from './world';
+import { CustomWorld } from './custom-world';
 import config from '../config/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -67,6 +67,7 @@ AfterAll(async function () {
 
 Before(async function (this: CustomWorld, scenario) {
     this.testMetadata.startTime = Date.now();
+    this.browser = browser;
     this.testMetadata.scenarioName = scenario.pickle.name;
 
     // Add Allure parameters for Scenario Outline examples

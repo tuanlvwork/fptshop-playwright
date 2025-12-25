@@ -10,11 +10,22 @@ on:
         type: choice
         options:
           - all
-          - '@brand'
-          - '@price'
-          - '@search'
-          - '@detail'
-          - '@combination'
+          # Domain tags
+          - '@fptshop'
+          - '@saucedemo'
+          # FPT Shop specific tags
+          - '@fptshop and @brand'
+          - '@fptshop and @price'
+          - '@fptshop and @search'
+          - '@fptshop and @detail'
+          - '@fptshop and @combination'
+          # SauceDemo specific tags
+          - '@saucedemo and @smoke'
+          - '@saucedemo and @login'
+          - '@saucedemo and @cart'
+          - '@saucedemo and @checkout'
+          - '@saucedemo and @standard'
+          - '@saucedemo and @negative'
       shardTotal:
         description: 'Total number of shards'
         required: true
