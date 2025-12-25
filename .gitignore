@@ -17,10 +17,14 @@ dist/
 allure-results/
 allure-report/
 allure-report-single/
+allure-report-test/
 .allure/
 
 # Diagnostics
 diagnostics/
+
+# Auth session storage (Lazy Login)
+auth/
 # Ignore root level reports but keep source files
 /*.json
 /*.html

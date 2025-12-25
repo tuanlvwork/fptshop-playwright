@@ -1,1 +1,0 @@
-[{"uid":"a4e798831ac3df91","name":"Standard user completes full checkout flow","time":{"start":1766694053127,"stop":1766694054268,"duration":1141},"status":"passed","severity":"normal"},{"uid":"b740b8b3106f44f4","name":"Standard user can login successfully","time":{"start":1766694054269,"stop":1766694055001,"duration":732},"status":"passed","severity":"normal"}]
