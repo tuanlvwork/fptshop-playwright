@@ -13,7 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const metricsFile = path.join(process.cwd(), 'diagnostics', 'lock-metrics.json');
+const metricsFile = path.join(__dirname, '../../diagnostics/lock-metrics.json');
 
 if (!fs.existsSync(metricsFile)) {
     console.log('❌ No lock metrics found. Run tests first.');
@@ -183,6 +183,6 @@ const summary = {
     )
 };
 
-const summaryFile = path.join(process.cwd(), 'diagnostics', 'lock-metrics-summary.json');
+const summaryFile = path.join(__dirname, '../../diagnostics/lock-metrics-summary.json');
 fs.writeFileSync(summaryFile, JSON.stringify(summary, null, 2));
 console.log(`💾 Summary exported to: ${summaryFile}\n`);

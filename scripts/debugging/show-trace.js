@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const tracesDir = path.join(__dirname, '../traces');
+const tracesDir = path.join(__dirname, '../../traces');
 const traceNumber = process.argv[2];
 
 if (!fs.existsSync(tracesDir)) {

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const tracesDir = path.join(__dirname, '../traces');
+const tracesDir = path.join(__dirname, '../../traces');
 
 console.log('\n🔍 Available Trace Files\n');
 console.log('='.repeat(80));

@@ -9,8 +9,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const metricsFile = path.join(process.cwd(), 'diagnostics', 'lock-metrics.json');
-const outputFile = path.join(process.cwd(), 'diagnostics', 'lock-metrics-report.html');
+const metricsFile = path.join(__dirname, '../../diagnostics/lock-metrics.json');
+const outputFile = path.join(__dirname, '../../diagnostics/lock-metrics-report.html');
 
 if (!fs.existsSync(metricsFile)) {
     console.log('❌ No lock metrics found. Run tests first.');

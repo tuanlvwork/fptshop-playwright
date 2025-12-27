@@ -68,7 +68,7 @@ console.log(`ENABLE_ALLURE env: ${process.env.ENABLE_ALLURE}`);
 console.log(`Allure enabled: ${enableAllure}`);
 
 // Ensure allure-results directory exists
-const resultsPath = path.join(process.cwd(), allureOutputDir);
+const resultsPath = path.join(__dirname, '../../', allureOutputDir);
 if (enableAllure) {
     if (!fs.existsSync(resultsPath)) {
         fs.mkdirSync(resultsPath, { recursive: true });
