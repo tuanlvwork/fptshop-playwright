@@ -1,6 +1,6 @@
 const common = {
     requireModule: ['ts-node/register', 'tsconfig-paths/register'],
-    require: ['src/steps/*.ts', 'src/support/*.ts'],
+    require: ['src/steps/**/*.ts', 'src/support/*.ts'],
 };
 
 // Allure configuration
@@ -38,7 +38,7 @@ module.exports = {
                 ...allureFormat,
             ],
         formatOptions: allureFormatOptions,
-        paths: ['features/*.feature'],
+        paths: ['features/**/*.feature'],
         publish: false,
     },
     // Shard profile for CI - minimal config, expects explicit args for require/paths

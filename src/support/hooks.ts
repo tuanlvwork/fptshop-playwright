@@ -1,11 +1,12 @@
 import { Before, After, AfterStep, BeforeStep, BeforeAll, AfterAll, setDefaultTimeout, Status } from '@cucumber/cucumber';
 import { chromium, Browser } from '@playwright/test';
-import { CustomWorld } from './world';
-import config from '../config/config';
+import { CustomWorld } from '@support/custom-world';
+import config from '@config/config';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getDiagnostics, DiagnosticsService } from '../utils/diagnostics';
-import { generateAllureEnvironment, generateAllureExecutor } from '../utils/allure-helpers';
+import { getDiagnostics, DiagnosticsService } from '@utils/diagnostics/diagnostics';
+import { generateAllureEnvironment, generateAllureExecutor } from '@utils/reporting/allure-helpers';
+import { LockMetricsCollector } from '@utils/auth/lock-metrics';
 import * as allure from 'allure-js-commons';
 
 setDefaultTimeout(config.defaultTimeout);
@@ -62,11 +63,23 @@ BeforeAll(async function () {
 });
 
 AfterAll(async function () {
+    // Save and print lock metrics
+    await LockMetricsCollector.save();
+    LockMetricsCollector.printSummary();
+
+    // Print recommendations
+    const recommendations = LockMetricsCollector.analyze();
+    if (recommendations.length > 0) {
+        console.log('\n📋 Lock Performance Recommendations:');
+        recommendations.forEach(rec => console.log(`  ${rec}`));
+    }
+
     await browser.close();
 });
 
 Before(async function (this: CustomWorld, scenario) {
     this.testMetadata.startTime = Date.now();
+    this.browser = browser;
     this.testMetadata.scenarioName = scenario.pickle.name;
 
     // Add Allure parameters for Scenario Outline examples

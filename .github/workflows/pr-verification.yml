@@ -1,0 +1,63 @@
+name: PR Verification
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Code Quality & Smoke Tests
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Verify Playwright version sync
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']" | sed 's/[\^~]//')
+          CONTAINER_VERSION=$(npx playwright --version | awk '{print $2}')
+          if [ "$PACKAGE_VERSION" != "$CONTAINER_VERSION" ]; then
+            echo "❌ VERSION MISMATCH: Package ($PACKAGE_VERSION) != Docker ($CONTAINER_VERSION)"
+            exit 1
+          fi
+          echo "✅ Versions match: $PACKAGE_VERSION"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: 🔍 TypeScript Compilation
+        run: npm run type-check
+        # Fails if there are type errors or broken imports
+
+      - name: 🔍 Test Configuration (Dry Run)
+        run: npm run test:cucumber -- --dry-run --parallel 2
+        env:
+          CI: 'true'
+        # Fails if feature files have syntax errors or missing steps
+
+      - name: 🧪 Smoke Verify (@saucedemo and @smoke)
+        run: npm run test:cucumber -- --tags "@saucedemo and @smoke" --parallel 2
+        env:
+          CI: 'true'
+          ALLURE_OUTPUT_DIR: 'allure-results'
+        # Fails if the application is completely broken
+
+      - name: Upload Report (On Failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-report
+          path: cucumber-report.html
+          retention-days: 3

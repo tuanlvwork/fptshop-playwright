@@ -1,8 +1,8 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { BasePage } from './base/BasePage';
-import { Header } from './components/Header';
-import { FilterBar } from './components/FilterBar';
-import { ProductList } from './components/ProductList';
+import { BasePage } from '@pages/base/BasePage';
+import { Header } from '@pages/components/Header';
+import { FilterBar } from '@pages/components/FilterBar';
+import { ProductList } from '@pages/components/ProductList';
 
 export class HomePage extends BasePage {
     readonly header: Header;
