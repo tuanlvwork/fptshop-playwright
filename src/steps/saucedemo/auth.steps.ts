@@ -113,6 +113,7 @@ Given('I am logged in as {string}', async function (this: CustomWorld, role: str
 
     // Phase 1: Check existing session
     if (storageStateExists) {
+        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] Phase 1: Attempting to reuse session from ${authFile}`);
         try {
             // Close the initial blank context/page set up in Before hook
             await this.page?.close();
@@ -136,16 +137,25 @@ Given('I am logged in as {string}', async function (this: CustomWorld, role: str
                 const inventoryList = this.page.locator('.inventory_list');
                 if (await inventoryList.count() > 0 && await inventoryList.isVisible()) {
                     verifySuccess = true;
+                    console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Phase 1: Session reused successfully`);
                 }
             }
+
+            if (!verifySuccess) {
+                console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ❌ Phase 1: Session validation failed (redirected or element missing)`);
+            }
         } catch (error) {
-            console.log(`Phase 1 Check failed for ${role}: ${error}`);
+            console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ❌ Phase 1: Session check failed - ${error}`);
             verifySuccess = false;
         }
+    } else {
+        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ℹ️  Phase 1: No session file found, will create new session`);
     }
 
     // Phase 2: Clean & Heal
     if (!verifySuccess) {
+        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] Phase 2: Starting fresh login (session invalid or missing)`);
+
         // Close invalid context
         try {
             await this.page?.close();
@@ -160,8 +170,14 @@ Given('I am logged in as {string}', async function (this: CustomWorld, role: str
         attachPageListeners(this);
         await startTracing(this);
 
+        const loginStartTime = Date.now();
+        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ⚠️  Phase 2: Performing UI login (potential race if multiple workers see this)...`);
+
         // Perform login
         await performLogin(this.page, role, authFile);
+
+        const loginDuration = Date.now() - loginStartTime;
+        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Phase 2: Login completed and session saved (took ${loginDuration}ms)`);
     }
 });
 

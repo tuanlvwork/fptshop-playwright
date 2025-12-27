@@ -14,7 +14,8 @@
     "report:cucumber": "node scripts/generate-cucumber-report.js",
     "allure:generate": "node scripts/generate-allure-report.js",
     "allure:open": "npx allure open allure-report",
-    "allure:serve": "npx allure serve allure-results"
+    "allure:serve": "npx allure serve allure-results",
+    "analyze:auth-race": "node scripts/analyze-auth-race.js"
   },
   "keywords": [],
   "author": "",

@@ -123,3 +123,24 @@ The project uses GitHub Actions with optimized workflows:
 *   **Declarative Gherkin**: Features describe *Business Behavior*, not UI clicks.
 *   **Nested Steps**: Page Objects use `allure.step()` to wrap low-level actions, keeping reports clean but debuggable.
 *   **Atomic Tests**: Each scenario is independent.
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+### Core Features
+- **[Lazy Login Implementation](docs/lazy-login/LAZY_LOGIN_IMPLEMENTATION.md)** - Session reuse for faster test execution
+- **[Auth Race Monitoring](docs/lazy-login/AUTH_RACE_MONITORING.md)** - Race condition detection and monitoring
+- **[Allure Setup Guide](docs/allure-reporting/ALLURE_SETUP_GUIDE.md)** - Complete Allure integration guide
+
+### Quick Links
+- [📂 Documentation Index](docs/README.md) - Complete documentation overview
+- [🔍 Monitoring Guide](docs/lazy-login/AUTH_MONITORING_GUIDE.md) - How to monitor auth operations
+
+## 🤝 Contributing
+
+When adding new features:
+1. Write tests first (TDD approach)
+2. Update relevant documentation in `docs/`
+3. Add examples to feature files
+4. Update this README if adding major functionality
