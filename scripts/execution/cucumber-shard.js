@@ -17,7 +17,7 @@ if (!shardIndex || !shardTotal) {
     process.exit(1);
 }
 
-const featuresDir = path.join(__dirname, '../features');
+const featuresDir = path.join(__dirname, '../../features');
 
 // Recursive function to find all .feature files in subdirectories
 function findFeatureFiles(dir, baseDir = '') {
@@ -112,16 +112,24 @@ if (tagsArg) {
         // Remove surrounding quotes if present (shell might include them)
         const cleanTag = tagValue.replace(/^['"]|['"]$/g, '');
         console.log(`Tag value: "${tagValue}" -> cleaned: "${cleanTag}"`);
-        cucumberArgs.push('--tags', cleanTag);
-        tagsForEnv = cleanTag;
+        if (cleanTag.toLowerCase() !== 'all') {
+            cucumberArgs.push('--tags', cleanTag);
+            tagsForEnv = cleanTag;
+        } else {
+            console.log("Tag is 'all', running all tests without tag filter.");
+        }
     } else {
         const directTags = args.find(a => a.startsWith('--tags='));
         if (directTags) {
             const tagValue = directTags.split('=')[1];
             const cleanTag = tagValue.replace(/^['"]|['"]$/g, '');
             console.log(`Direct tag value: "${tagValue}" -> cleaned: "${cleanTag}"`);
-            cucumberArgs.push('--tags', cleanTag);
-            tagsForEnv = cleanTag;
+            if (cleanTag.toLowerCase() !== 'all') {
+                cucumberArgs.push('--tags', cleanTag);
+                tagsForEnv = cleanTag;
+            } else {
+                console.log("Tag is 'all', running all tests without tag filter.");
+            }
         }
     }
 }

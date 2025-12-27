@@ -33,14 +33,14 @@ runs:
         echo "ENABLE_ALLURE=$ENABLE_ALLURE"
         echo "Running shard ${{ inputs.shard-index }}/${{ inputs.shard-total }} tests..."
         echo "Tags input: ${{ inputs.tags }}"
-        TAGS_ARG=""
+        TAGS_ARGS=()
         if [ "${{ inputs.tags }}" != "all" ] && [ -n "${{ inputs.tags }}" ]; then
-          TAGS_ARG="--tags ${{ inputs.tags }}"
+          TAGS_ARGS=("--tags" "${{ inputs.tags }}")
         fi
-        echo "TAGS_ARG: $TAGS_ARG"
+        echo "TAGS_ARGS: ${TAGS_ARGS[@]}"
         # We capture the exit code to determine failure later if needed, but for now preserving || true pattern
         # effectively suppressing the error code so the next steps run.
-        npm run test:cucumber:shard -- --shard=${{ inputs.shard-index }}/${{ inputs.shard-total }} --parallel=${{ inputs.parallel-workers }} $TAGS_ARG || true
+        npm run test:cucumber:shard -- --shard=${{ inputs.shard-index }}/${{ inputs.shard-total }} --parallel=${{ inputs.parallel-workers }} "${TAGS_ARGS[@]}" || true
         
         echo ""
         echo "=== Allure results for shard ${{ inputs.shard-index }} ==="
