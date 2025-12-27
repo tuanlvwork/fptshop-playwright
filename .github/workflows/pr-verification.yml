@@ -15,6 +15,9 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup App
         uses: ./.github/actions/setup-app
 
