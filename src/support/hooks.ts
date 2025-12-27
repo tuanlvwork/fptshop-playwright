@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getDiagnostics, DiagnosticsService } from '../utils/diagnostics';
 import { generateAllureEnvironment, generateAllureExecutor } from '../utils/allure-helpers';
+import { LockMetricsCollector } from '../utils/lock-metrics';
 import * as allure from 'allure-js-commons';
 
 setDefaultTimeout(config.defaultTimeout);
@@ -62,6 +63,17 @@ BeforeAll(async function () {
 });
 
 AfterAll(async function () {
+    // Save and print lock metrics
+    await LockMetricsCollector.save();
+    LockMetricsCollector.printSummary();
+
+    // Print recommendations
+    const recommendations = LockMetricsCollector.analyze();
+    if (recommendations.length > 0) {
+        console.log('\n📋 Lock Performance Recommendations:');
+        recommendations.forEach(rec => console.log(`  ${rec}`));
+    }
+
     await browser.close();
 });
 

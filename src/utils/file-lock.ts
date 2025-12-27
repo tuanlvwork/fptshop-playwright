@@ -1,6 +1,7 @@
 import * as lockfile from 'proper-lockfile';
 import * as fs from 'fs';
 import * as path from 'path';
+import { LockMetricsCollector } from './lock-metrics';
 
 export interface LockOptions {
     retries?: number;
@@ -41,24 +42,60 @@ export class FileLock {
         };
 
         const role = filePath.split('/').pop()?.replace('.json', '') || 'unknown';
-        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] 🔒 Acquiring lock for ${filePath}...`);
+        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] 🔐 Acquiring lock for ${filePath}...`);
         const startTime = Date.now();
 
         try {
             const release = await lockfile.lock(lockPath, lockOptions);
             const duration = Date.now() - startTime;
 
+            // Record metrics
+            LockMetricsCollector.record({
+                timestamp: new Date().toISOString(),
+                pid: process.pid,
+                role,
+                operation: 'acquire',
+                durationMs: duration,
+                success: true
+            });
+
             if (duration > 50) {
-                console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Lock acquired (waited ${duration}ms)`);
+                console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] 🔑 Lock acquired (waited ${duration}ms)`);
             } else {
-                console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Lock acquired immediately`);
+                console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] 🔑 Lock acquired immediately`);
             }
 
             return async () => {
+                const releaseStart = Date.now();
                 await release();
+                const releaseDuration = Date.now() - releaseStart;
+
+                // Record release metrics
+                LockMetricsCollector.record({
+                    timestamp: new Date().toISOString(),
+                    pid: process.pid,
+                    role,
+                    operation: 'release',
+                    durationMs: releaseDuration,
+                    success: true
+                });
+
                 console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] 🔓 Lock released`);
             };
         } catch (error) {
+            const duration = Date.now() - startTime;
+
+            // Record failed acquisition
+            LockMetricsCollector.record({
+                timestamp: new Date().toISOString(),
+                pid: process.pid,
+                role,
+                operation: 'acquire',
+                durationMs: duration,
+                success: false,
+                error: String(error)
+            });
+
             console.error(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ❌ Failed to acquire lock: ${error}`);
             throw error;
         }

@@ -186,6 +186,15 @@ jobs:
         retention-days: 7
         if-no-files-found: warn
 
+    - name: Upload Lock Metrics
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lock-metrics-${{ matrix.shardIndex }}
+        path: diagnostics/lock-metrics*.json
+        retention-days: 7
+        if-no-files-found: ignore
+
   merge-reports:
     if: always()
     needs: [setup, test]
@@ -294,3 +303,73 @@ jobs:
         path: allure-report/complete-report.html
         retention-days: 30
         if-no-files-found: warn
+
+  lock-metrics-analysis:
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Download all lock metrics
+      uses: actions/download-artifact@v4
+      with:
+        pattern: lock-metrics-*
+        merge-multiple: false
+        path: lock-metrics-shards
+
+    - name: Merge lock metrics from all shards
+      run: |
+        echo "Merging lock metrics from all shards..."
+        mkdir -p diagnostics
+        
+        # Merge all shard metrics into one file
+        echo "[" > diagnostics/lock-metrics.json
+        first=true
+        for shard_dir in lock-metrics-shards/lock-metrics-*; do
+          if [ -f "$shard_dir/lock-metrics.json" ]; then
+            if [ "$first" = true ]; then
+              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
+              first=false
+            else
+              echo "," >> diagnostics/lock-metrics.json
+              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
+            fi
+          fi
+        done
+        echo "]" >> diagnostics/lock-metrics.json
+        
+        echo "Merged metrics count: $(jq 'length' diagnostics/lock-metrics.json)"
+
+    - name: Analyze lock metrics
+      run: |
+        echo "================================================"
+        echo "           LOCK METRICS ANALYSIS (CI)"
+        echo "================================================"
+        npm run analyze:lock-metrics
+        echo "================================================"
+
+    - name: Generate HTML Report
+      run: |
+        echo "Generating interactive HTML dashboard..."
+        npm run generate:lock-report
+        ls -lh diagnostics/lock-metrics-report.html
+
+    - name: Upload lock metrics and HTML report
+      uses: actions/upload-artifact@v4
+      with:
+        name: lock-metrics-report
+        path: |
+          diagnostics/lock-metrics*.json
+          diagnostics/lock-metrics-report.html
+        retention-days: 30
