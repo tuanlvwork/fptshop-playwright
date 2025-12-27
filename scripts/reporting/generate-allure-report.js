@@ -2,9 +2,9 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const resultsDir = path.join(__dirname, '../allure-results');
-const reportDir = path.join(__dirname, '../allure-report');
-const blobsDir = path.join(__dirname, '../allure-results-blobs'); // Temp dir for extracted shards
+const resultsDir = path.join(__dirname, '../../allure-results');
+const reportDir = path.join(__dirname, '../../allure-report');
+const blobsDir = path.join(__dirname, '../../allure-results-blobs'); // Temp dir for extracted shards
 
 console.log('🔍 Checking for Allure results...');
 
@@ -220,7 +220,7 @@ try {
     }
 
     // 3. Copy categories.json
-    const categoriesSource = path.join(__dirname, '../allure-categories.json');
+    const categoriesSource = path.join(__dirname, '../../allure-categories.json');
     const categoriesDest = path.join(resultsDir, 'categories.json');
 
     if (fs.existsSync(categoriesSource)) {
@@ -232,7 +232,7 @@ try {
     execSync(`npx allure generate ${resultsDir} --clean -o ${reportDir}`, { stdio: 'inherit' });
 
     // 5. Generate Single-File Report
-    const singleFileDir = path.join(__dirname, '../allure-report-single');
+    const singleFileDir = path.join(__dirname, '../../allure-report-single');
     execSync(`npx allure generate ${resultsDir} --clean --single-file -o ${singleFileDir}`, { stdio: 'inherit' });
 
     // 6. Copy alias

@@ -6,7 +6,7 @@ const path = require('path');
     const browser = await chromium.launch();
     const page = await browser.newPage();
 
-    const reportPath = path.join(__dirname, '../cucumber-report/index.html');
+    const reportPath = path.join(__dirname, '../../cucumber-report/index.html');
     const fileUrl = `file://${reportPath}`;
 
     console.log(`Navigating to ${fileUrl}`);
@@ -18,7 +18,7 @@ const path = require('path');
     // Set a reasonable viewport to capture the summary clearly
     await page.setViewportSize({ width: 1280, height: 1024 });
 
-    const screenshotPath = path.join(__dirname, '../cucumber-report/cucumber-report-summary.png');
+    const screenshotPath = path.join(__dirname, '../../cucumber-report/cucumber-report-summary.png');
 
     // Capture the screenshot
     await page.screenshot({ path: screenshotPath, fullPage: false });

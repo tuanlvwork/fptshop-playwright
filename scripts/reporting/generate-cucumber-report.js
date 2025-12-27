@@ -2,8 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const reporter = require('cucumber-html-reporter');
 
-const reportFile = path.join(__dirname, '../cucumber-report.json');
-const outputDir = path.join(__dirname, '../cucumber-report');
+const reportFile = path.join(__dirname, '../../cucumber-report.json');
+const outputDir = path.join(__dirname, '../../cucumber-report');
 
 if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
