@@ -1,9 +1,9 @@
 import { Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
-import { NetworkLogger } from './network-logger';
-import { ConsoleCapture } from './console-capture';
-import { PerformanceTracker } from './performance-tracker';
+import { NetworkLogger } from '@utils/diagnostics/network-logger';
+import { ConsoleCapture } from '@utils/diagnostics/console-capture';
+import { PerformanceTracker } from '@utils/diagnostics/performance-tracker';
 
 export interface DiagnosticsConfig {
     enableNetworkLogging?: boolean;

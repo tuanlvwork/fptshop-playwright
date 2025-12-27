@@ -1,9 +1,9 @@
 import { Given, When, Then } from '@cucumber/cucumber';
-import { CustomWorld } from '../../support/custom-world';
-import { performLogin } from '../../utils/auth/saucedemo/auth-helper';
-import { FileLock } from '../../utils/auth/file-lock';
-import { USERS } from '../../config/saucedemo/users';
-import config from '../../config/config';
+import { CustomWorld } from '@support/custom-world';
+import { performLogin } from '@utils/auth/saucedemo/auth-helper';
+import { FileLock } from '@utils/auth/file-lock';
+import { USERS } from '@config/saucedemo/users';
+import config from '@config/config';
 import * as path from 'path';
 import * as fs from 'fs';
 import { expect } from '@playwright/test';

@@ -1,5 +1,5 @@
 import { When, Then, Given } from '@cucumber/cucumber';
-import { CustomWorld } from '../../support/custom-world';
+import { CustomWorld } from '@support/custom-world';
 import { expect } from '@playwright/test';
 
 // ============================================

@@ -34,6 +34,21 @@
             ],
             "@config/*": [
                 "src/config/*"
+            ],
+            "@utils/*": [
+                "src/utils/*"
+            ],
+            "@utils/auth/*": [
+                "src/utils/auth/*"
+            ],
+            "@utils/diagnostics/*": [
+                "src/utils/diagnostics/*"
+            ],
+            "@utils/reporting/*": [
+                "src/utils/reporting/*"
+            ],
+            "@utils/common/*": [
+                "src/utils/common/*"
             ]
         }
     },

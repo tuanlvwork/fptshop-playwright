@@ -1,0 +1,2 @@
+echo "👀 Verifying test configuration (dry-run)..."
+npm run test:cucumber -- --dry-run --parallel 4

@@ -1,7 +1,7 @@
 import { When } from '@cucumber/cucumber';
-import { CustomWorld } from '../../support/custom-world';
-import { HomePage } from '../../pages/HomePage';
-import { retryInteraction, retryNavigation } from '../../utils/common/retry';
+import { CustomWorld } from '@support/custom-world';
+import { HomePage } from '@pages/HomePage';
+import { retryInteraction, retryNavigation } from '@utils/common/retry';
 
 /**
  * Filter by brand with retry for element interaction failures.

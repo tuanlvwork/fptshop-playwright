@@ -1,7 +1,7 @@
 import * as lockfile from 'proper-lockfile';
 import * as fs from 'fs';
 import * as path from 'path';
-import { LockMetricsCollector } from './lock-metrics';
+import { LockMetricsCollector } from '@utils/auth/lock-metrics';
 
 export interface LockOptions {
     retries?: number;

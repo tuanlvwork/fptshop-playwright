@@ -1,5 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
-import { BasePage } from './base/BasePage';
+import { BasePage } from '@pages/base/BasePage';
 
 export class ProductDetailPage extends BasePage {
     readonly pageHeader: Locator;
