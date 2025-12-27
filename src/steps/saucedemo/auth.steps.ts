@@ -1,6 +1,7 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { CustomWorld } from '../../support/custom-world';
 import { performLogin } from '../../utils/saucedemo/auth-helper';
+import { FileLock } from '../../utils/file-lock';
 import { USERS } from '../../config/saucedemo/users';
 import config from '../../config/config';
 import * as path from 'path';
@@ -152,32 +153,83 @@ Given('I am logged in as {string}', async function (this: CustomWorld, role: str
         console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ℹ️  Phase 1: No session file found, will create new session`);
     }
 
-    // Phase 2: Clean & Heal
+    // Phase 2: Clean & Heal (with File Locking)
     if (!verifySuccess) {
         console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] Phase 2: Starting fresh login (session invalid or missing)`);
 
-        // Close invalid context
+        // Acquire lock to prevent race conditions
+        let releaseLock: (() => Promise<void>) | null = null;
+
         try {
-            await this.page?.close();
-            await this.context?.close();
-        } catch (e) { /* ignore */ }
+            // Try to acquire lock (will wait if another worker has it)
+            releaseLock = await FileLock.acquire(authFile, {
+                retries: 10,      // Retry up to 10 times
+                minTimeout: 100,  // Start with 100ms wait
+                maxTimeout: 2000  // Max 2s wait between retries
+            });
 
-        // Fresh context
-        this.context = await this.browser.newContext(contextOptions);
-        this.page = await this.context.newPage();
+            // Double-check: Maybe another worker created the file while we waited for lock
+            if (fs.existsSync(authFile)) {
+                console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ℹ️  Session created by another worker while waiting, attempting reuse...`);
 
-        // Restore listeners and tracing
-        attachPageListeners(this);
-        await startTracing(this);
+                // Close current context
+                try {
+                    await this.page?.close();
+                    await this.context?.close();
+                } catch (e) { /* ignore */ }
 
-        const loginStartTime = Date.now();
-        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ⚠️  Phase 2: Performing UI login (potential race if multiple workers see this)...`);
+                // Try to use the newly created session
+                this.context = await this.browser.newContext({
+                    ...contextOptions,
+                    storageState: authFile,
+                });
+                this.page = await this.context.newPage();
 
-        // Perform login
-        await performLogin(this.page, role, authFile);
+                attachPageListeners(this);
+                await startTracing(this);
 
-        const loginDuration = Date.now() - loginStartTime;
-        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Phase 2: Login completed and session saved (took ${loginDuration}ms)`);
+                await this.page.goto('https://www.saucedemo.com/inventory.html');
+
+                if (this.page.url().includes('/inventory.html')) {
+                    const inventoryList = this.page.locator('.inventory_list');
+                    if (await inventoryList.count() > 0 && await inventoryList.isVisible()) {
+                        console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Phase 2: Reused session created by another worker`);
+                        return; // Success! Exit early
+                    }
+                }
+
+                // If reuse failed, continue with fresh login below
+                console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ⚠️  Reuse failed, proceeding with fresh login`);
+            }
+
+            // Close invalid context (if still exists)
+            try {
+                await this.page?.close();
+                await this.context?.close();
+            } catch (e) { /* ignore */ }
+
+            // Fresh context
+            this.context = await this.browser.newContext(contextOptions);
+            this.page = await this.context.newPage();
+
+            // Restore listeners and tracing
+            attachPageListeners(this);
+            await startTracing(this);
+
+            const loginStartTime = Date.now();
+            console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ⚠️  Phase 2: Performing UI login (LOCK HELD - no race possible)...`);
+
+            // Perform login (protected by lock)
+            await performLogin(this.page, role, authFile);
+
+            const loginDuration = Date.now() - loginStartTime;
+            console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Phase 2: Login completed and session saved (took ${loginDuration}ms)`);
+        } finally {
+            // Always release lock, even if error occurs
+            if (releaseLock) {
+                await releaseLock();
+            }
+        }
     }
 });
 
