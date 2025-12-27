@@ -1,0 +1,29 @@
+name: 'Run Validation'
+description: 'Run TypeScript check and smoke tests'
+runs:
+  using: "composite"
+  steps:
+    - name: TypeScript compilation check
+      shell: bash
+      run: |
+        echo "🔍 Checking TypeScript compilation..."
+        npx tsc --noEmit
+        echo "✅ TypeScript compilation successful"
+
+    - name: Validate ALL test scenarios (dry-run)
+      shell: bash
+      env:
+        CI: 'true'
+      run: |
+        echo "🔍 Validating ALL test scenarios and step definitions..."
+        echo "This checks syntax, imports, and step mappings without running tests"
+        npm run test:cucumber -- --dry-run --parallel 1
+
+    - name: Run smoke tests (actual execution)
+      shell: bash
+      env:
+        CI: 'true'
+        ALLURE_OUTPUT_DIR: 'allure-results-validate'
+      run: |
+        echo "🧪 Running quick smoke tests to validate execution..."
+        npm run test:cucumber -- --tags "@saucedemo and @smoke" --parallel 2

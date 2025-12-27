@@ -1,0 +1,95 @@
+name: 'Run Cucumber Tests'
+description: 'Run Cucumber tests with sharding and reporting'
+inputs:
+  shard-index:
+    description: 'Current shard index'
+    required: true
+  shard-total:
+    description: 'Total number of shards'
+    required: true
+  parallel-workers:
+    description: 'Number of parallel workers'
+    required: true
+  tags:
+    description: 'Tags to filter tests'
+    required: false
+    default: 'all'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Clean Allure results
+      shell: bash
+      run: |
+        rm -rf allure-results || true
+        mkdir -p allure-results
+        echo "Cleaned allure-results directory for shard ${{ inputs.shard-index }}"
+
+    - name: Run Cucumber tests
+      shell: bash
+      env:
+        ENABLE_ALLURE: 'true'
+      run: |
+        echo "ENABLE_ALLURE=$ENABLE_ALLURE"
+        echo "Running shard ${{ inputs.shard-index }}/${{ inputs.shard-total }} tests..."
+        echo "Tags input: ${{ inputs.tags }}"
+        TAGS_ARG=""
+        if [ "${{ inputs.tags }}" != "all" ] && [ -n "${{ inputs.tags }}" ]; then
+          TAGS_ARG="--tags ${{ inputs.tags }}"
+        fi
+        echo "TAGS_ARG: $TAGS_ARG"
+        # We capture the exit code to determine failure later if needed, but for now preserving || true pattern
+        # effectively suppressing the error code so the next steps run.
+        npm run test:cucumber:shard -- --shard=${{ inputs.shard-index }}/${{ inputs.shard-total }} --parallel=${{ inputs.parallel-workers }} $TAGS_ARG || true
+        
+        echo ""
+        echo "=== Allure results for shard ${{ inputs.shard-index }} ==="
+        ls -la allure-results/ | head -20 || echo "No allure-results found"
+        RESULT_COUNT=$(find allure-results -name "*-result.json" 2>/dev/null | wc -l)
+        echo "Total result files: $RESULT_COUNT"
+
+    - name: Upload trace files
+      uses: actions/upload-artifact@v4
+      if: failure() 
+      with:
+        name: traces-${{ inputs.shard-index }}
+        path: traces/
+        retention-days: 7
+        if-no-files-found: ignore
+
+    - name: Upload diagnostics
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: diagnostics-${{ inputs.shard-index }}
+        path: diagnostics/
+        retention-days: 7
+        if-no-files-found: ignore
+
+    - name: Upload shard report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: cucumber-report-${{ inputs.shard-index }}
+        path: |
+          cucumber-report-${{ inputs.shard-index }}.html
+          cucumber-report-${{ inputs.shard-index }}.json
+        retention-days: 1
+
+    - name: Upload Allure Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results-cucumber-${{ inputs.shard-index }}
+        path: allure-results/
+        retention-days: 7
+        if-no-files-found: warn
+
+    - name: Upload Lock Metrics
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lock-metrics-${{ inputs.shard-index }}
+        path: diagnostics/lock-metrics*.json
+        retention-days: 7
+        if-no-files-found: ignore

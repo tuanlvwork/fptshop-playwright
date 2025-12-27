@@ -72,67 +72,14 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Setup App
+        uses: ./.github/actions/setup-app
+        with:
+          node-version: '20'
+          install-deps: 'true'
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: TypeScript compilation check
-      run: |
-        echo "🔍 Checking TypeScript compilation..."
-        npx tsc --noEmit
-        echo "✅ TypeScript compilation successful"
-
-    - name: Validate ALL test scenarios (dry-run)
-      run: |
-        echo "🔍 Validating ALL test scenarios and step definitions..."
-        echo "This checks syntax, imports, and step mappings without running tests"
-        npm run test:cucumber -- --dry-run --parallel 1
-      env:
-        CI: 'true'
-
-    - name: Run smoke tests (actual execution)
-      run: |
-        echo "🧪 Running quick smoke tests to validate execution..."
-        npm run test:cucumber -- --tags "@saucedemo and @smoke" --parallel 2
-      env:
-        CI: 'true'
-        ALLURE_OUTPUT_DIR: 'allure-results-validate'
-
-    - name: Validation summary
-      if: always()
-      run: |
-        echo "================================================"
-        echo "           VALIDATION SUMMARY"
-        echo "================================================"
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "✅ All validations passed!"
-          echo "   - TypeScript compilation: OK"
-          echo "   - Scenario syntax (ALL tests): VALID"
-          echo "   - Smoke tests execution: PASSED"
-          echo ""
-          echo "✅ All test scenarios are valid and ready to run"
-          echo "Proceeding to full test suite..."
-        else
-          echo "❌ Validation failed!"
-          echo ""
-          echo "Common issues:"
-          echo "  - Missing step definitions"
-          echo "  - Syntax errors in feature files"
-          echo "  - TypeScript compilation errors"
-          echo "  - Runtime errors in smoke tests"
-          echo ""
-          echo "Please fix the issues before running full tests."
-          echo "This saves CI resources and provides faster feedback."
-        fi
-        echo "================================================"
+      - name: Run Validation Check
+        uses: ./.github/actions/run-validation
 
   test:
     needs: [setup, validate]
@@ -146,123 +93,22 @@ jobs:
         shardIndex: ${{ fromJson(needs.setup.outputs.matrix) }}
         shardTotal: [ "${{ needs.setup.outputs.shardTotal }}" ]
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Setup App
+        uses: ./.github/actions/setup-app
+        with:
+          node-version: '20'
+          install-deps: 'true'
 
-    - name: Verify Playwright version sync
-      run: |
-        # Get Playwright version from package.json
-        PACKAGE_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']" | sed 's/[\^~]//')
-        # Get container version from environment (set by Docker image)
-        CONTAINER_VERSION=$(npx playwright --version | awk '{print $2}')
-        
-        echo "📦 package.json @playwright/test: $PACKAGE_VERSION"
-        echo "🐳 Docker container Playwright:   $CONTAINER_VERSION"
-        
-        if [ "$PACKAGE_VERSION" != "$CONTAINER_VERSION" ]; then
-          echo ""
-          echo "❌ VERSION MISMATCH!"
-          echo "Please update the Docker image in this workflow to:"
-          echo "  image: mcr.microsoft.com/playwright:v${PACKAGE_VERSION}-noble"
-          exit 1
-        fi
-        echo "✅ Versions match!"
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
+      - name: Check Playwright Version
+        uses: ./.github/actions/check-playwright-version
 
-    - name: Cache node_modules
-      uses: actions/cache@v4
-      id: node-modules-cache
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-modules-
-
-    - name: Install dependencies
-      if: steps.node-modules-cache.outputs.cache-hit != 'true'
-      run: npm ci
-
-    # Note: Playwright browsers and dependencies are pre-installed in the Docker container
-    # No need for separate install steps!
-
-    - name: Clean Allure results (ensure no cached data)
-      run: |
-        rm -rf allure-results || true
-        mkdir -p allure-results
-        echo "Cleaned allure-results directory for shard ${{ matrix.shardIndex }}"
-
-    - name: Run Cucumber tests
-      run: |
-        echo "ENABLE_ALLURE=$ENABLE_ALLURE"
-        echo "Running shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }} tests..."
-        echo "Tags input: ${{ github.event.inputs.tags }}"
-        TAGS_ARG=""
-        if [ "${{ github.event.inputs.tags }}" != "all" ] && [ -n "${{ github.event.inputs.tags }}" ]; then
-          TAGS_ARG="--tags ${{ github.event.inputs.tags }}"
-        fi
-        echo "TAGS_ARG: $TAGS_ARG"
-        npm run test:cucumber:shard -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} --parallel=${{ needs.setup.outputs.parallelWorkers }} $TAGS_ARG || true
-        
-        # Log what was generated
-        echo ""
-        echo "=== Allure results for shard ${{ matrix.shardIndex }} ==="
-        ls -la allure-results/ | head -20 || echo "No allure-results found"
-        RESULT_COUNT=$(find allure-results -name "*-result.json" 2>/dev/null | wc -l)
-        echo "Total result files: $RESULT_COUNT"
-      env:
-        ENABLE_ALLURE: 'true'
-
-    - name: Upload trace files
-      uses: actions/upload-artifact@v4
-      if: failure()
-      with:
-        name: traces-${{ matrix.shardIndex }}
-        path: traces/
-        retention-days: 7
-        if-no-files-found: ignore
-
-    - name: Upload diagnostics
-      uses: actions/upload-artifact@v4
-      if: failure()
-      with:
-        name: diagnostics-${{ matrix.shardIndex }}
-        path: diagnostics/
-        retention-days: 7
-        if-no-files-found: ignore
-
-    - name: Upload shard report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: cucumber-report-${{ matrix.shardIndex }}
-        path: |
-          cucumber-report-${{ matrix.shardIndex }}.html
-          cucumber-report-${{ matrix.shardIndex }}.json
-        retention-days: 1
-
-
-
-    - name: Upload Allure Results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: allure-results-cucumber-${{ matrix.shardIndex }}
-        path: allure-results/
-        retention-days: 7
-        if-no-files-found: warn
-
-    - name: Upload Lock Metrics
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: lock-metrics-${{ matrix.shardIndex }}
-        path: diagnostics/lock-metrics*.json
-        retention-days: 7
-        if-no-files-found: ignore
+      - name: Run Cucumber Tests
+        uses: ./.github/actions/run-cucumber-tests
+        with:
+          shard-index: ${{ matrix.shardIndex }}
+          shard-total: ${{ matrix.shardTotal }}
+          parallel-workers: ${{ needs.setup.outputs.parallelWorkers }}
+          tags: ${{ github.event.inputs.tags }}
 
   merge-reports:
     if: always()
@@ -271,174 +117,44 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.57.0-noble
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Setup App
+        uses: ./.github/actions/setup-app
+        with:
+          node-version: '20'
+          install-deps: 'true'
 
-    - name: Verify Playwright version sync
-      run: |
-        PACKAGE_VERSION=$(node -p "require('./package.json').devDependencies['@playwright/test']" | sed 's/[\^~]//')
-        CONTAINER_VERSION=$(npx playwright --version | awk '{print $2}')
-        echo "📦 package.json: $PACKAGE_VERSION | 🐳 Container: $CONTAINER_VERSION"
-        if [ "$PACKAGE_VERSION" != "$CONTAINER_VERSION" ]; then
-          echo "❌ VERSION MISMATCH! Update Docker image to: v${PACKAGE_VERSION}-noble"
-          exit 1
-        fi
-        echo "✅ Versions match!"
+      - name: Check Playwright Version
+        uses: ./.github/actions/check-playwright-version
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
-
-    - name: Cache node_modules
-      uses: actions/cache@v4
-      id: node-modules-cache
-      with:
-        path: node_modules
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-modules-
-
-    - name: Install dependencies
-      if: steps.node-modules-cache.outputs.cache-hit != 'true'
-      run: npm ci
-
-    # Note: Playwright browsers are pre-installed in Docker container
-
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        pattern: cucumber-report-*
-        merge-multiple: true
-        path: all-cucumber-reports
-
-    - name: Merge reports
-      env:
-        START_TIME: ${{ needs.setup.outputs.startTime }}
-      run: node scripts/reporting/merge-cucumber-reports.js
-
-    - name: Capture Report Screenshot
-      run: node scripts/reporting/capture-report-screenshot.js
-
-    - name: Upload HTML report
-      uses: actions/upload-artifact@v4
-      with:
-        name: cucumber-html-report
-        path: cucumber-report
-        retention-days: 30
-
-    - name: Upload report summary
-      uses: actions/upload-artifact@v4
-      with:
-        name: cucumber-report-summary
-        path: cucumber-report/cucumber-report-summary.png
-        retention-days: 30
-
+      - name: Merge Cucumber Results
+        uses: ./.github/actions/merge-cucumber-results
+        with:
+          start-time: ${{ needs.setup.outputs.startTime }}
 
   allure-report:
     if: always()
     needs: [test]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Setup App
+        uses: ./.github/actions/setup-app
+        with:
+          node-version: '20'
+          install-deps: 'false'
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
-
-    - name: Download all Allure results
-      uses: actions/download-artifact@v4
-      with:
-        pattern: allure-results-cucumber-*
-        merge-multiple: false
-        path: allure-results-blobs
-
-    - name: Install Allure Commandline
-      run: npm install -g allure-commandline
-
-    - name: Generate Allure Report
-      run: |
-        # Run the Node Script (handles: Shard merging, Categories, Report generation)
-        node scripts/reporting/generate-allure-report.js
-
-    - name: Upload Single-File Report
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-report-cucumber
-        path: allure-report/complete-report.html
-        retention-days: 30
-        if-no-files-found: warn
+      - name: Generate Allure Report
+        uses: ./.github/actions/generate-allure-report
 
   lock-metrics-analysis:
     if: always()
     needs: [test]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Setup App
+        uses: ./.github/actions/setup-app
+        with:
+          node-version: '20'
+          install-deps: 'true'
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Download all lock metrics
-      uses: actions/download-artifact@v4
-      with:
-        pattern: lock-metrics-*
-        merge-multiple: false
-        path: lock-metrics-shards
-
-    - name: Merge lock metrics from all shards
-      run: |
-        echo "Merging lock metrics from all shards..."
-        mkdir -p diagnostics
-        
-        # Merge all shard metrics into one file
-        echo "[" > diagnostics/lock-metrics.json
-        first=true
-        for shard_dir in lock-metrics-shards/lock-metrics-*; do
-          if [ -f "$shard_dir/lock-metrics.json" ]; then
-            if [ "$first" = true ]; then
-              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
-              first=false
-            else
-              echo "," >> diagnostics/lock-metrics.json
-              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
-            fi
-          fi
-        done
-        echo "]" >> diagnostics/lock-metrics.json
-        
-        echo "Merged metrics count: $(jq 'length' diagnostics/lock-metrics.json)"
-
-    - name: Analyze lock metrics
-      run: |
-        echo "================================================"
-        echo "           LOCK METRICS ANALYSIS (CI)"
-        echo "================================================"
-        npm run analyze:lock-metrics
-        echo "================================================"
-
-    - name: Generate HTML Report
-      run: |
-        echo "Generating interactive HTML dashboard..."
-        npm run generate:lock-report
-        ls -lh diagnostics/lock-metrics-report.html
-
-    - name: Upload lock metrics and HTML report
-      uses: actions/upload-artifact@v4
-      with:
-        name: lock-metrics-report
-        path: |
-          diagnostics/lock-metrics*.json
-          diagnostics/lock-metrics-report.html
-        retention-days: 30
+      - name: Analyze Lock Metrics
+        uses: ./.github/actions/analyze-lock-metrics

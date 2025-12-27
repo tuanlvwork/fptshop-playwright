@@ -1,0 +1,37 @@
+name: 'Setup App'
+description: 'Checkout code, setup Node.js, and install dependencies'
+inputs:
+  node-version:
+    description: 'Node.js version'
+    required: false
+    default: '20'
+  install-deps:
+    description: 'Whether to install dependencies'
+    required: false
+    default: 'true'
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Cache node_modules
+      if: inputs.install-deps == 'true'
+      uses: actions/cache@v4
+      id: node-modules-cache
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-modules-
+
+    - name: Install dependencies
+      if: inputs.install-deps == 'true' && steps.node-modules-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: npm ci

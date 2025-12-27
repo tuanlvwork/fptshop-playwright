@@ -1,0 +1,29 @@
+name: 'Generate Allure Report'
+description: 'Download results, generate report and upload'
+runs:
+  using: "composite"
+  steps:
+    - name: Download all Allure results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: allure-results-cucumber-*
+        merge-multiple: false
+        path: allure-results-blobs
+
+    - name: Install Allure Commandline
+      shell: bash
+      run: npm install -g allure-commandline
+
+    - name: Generate Allure Report
+      shell: bash
+      run: |
+        # Run the Node Script
+        node scripts/reporting/generate-allure-report.js
+
+    - name: Upload Single-File Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report-cucumber
+        path: allure-report/complete-report.html
+        retention-days: 30
+        if-no-files-found: warn

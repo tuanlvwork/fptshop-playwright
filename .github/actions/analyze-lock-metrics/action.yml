@@ -1,0 +1,60 @@
+name: 'Analyze Lock Metrics'
+description: 'Download, merge and analyze lock metrics'
+runs:
+  using: "composite"
+  steps:
+    - name: Download all lock metrics
+      uses: actions/download-artifact@v4
+      with:
+        pattern: lock-metrics-*
+        merge-multiple: false
+        path: lock-metrics-shards
+
+    - name: Merge lock metrics from all shards
+      shell: bash
+      run: |
+        echo "Merging lock metrics from all shards..."
+        mkdir -p diagnostics
+        
+        # Merge all shard metrics into one file
+        echo "[" > diagnostics/lock-metrics.json
+        first=true
+        for shard_dir in lock-metrics-shards/lock-metrics-*; do
+          if [ -f "$shard_dir/lock-metrics.json" ]; then
+            if [ "$first" = true ]; then
+              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
+              first=false
+            else
+              echo "," >> diagnostics/lock-metrics.json
+              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
+            fi
+          fi
+        done
+        echo "]" >> diagnostics/lock-metrics.json
+        
+        echo "Merged metrics count: $(jq 'length' diagnostics/lock-metrics.json)"
+
+    - name: Analyze lock metrics
+      shell: bash
+      run: |
+        echo "================================================"
+        echo "           LOCK METRICS ANALYSIS (CI)"
+        echo "================================================"
+        npm run analyze:lock-metrics
+        echo "================================================"
+
+    - name: Generate HTML Report
+      shell: bash
+      run: |
+        echo "Generating interactive HTML dashboard..."
+        npm run generate:lock-report
+        ls -lh diagnostics/lock-metrics-report.html
+
+    - name: Upload lock metrics and HTML report
+      uses: actions/upload-artifact@v4
+      with:
+        name: lock-metrics-report
+        path: |
+          diagnostics/lock-metrics*.json
+          diagnostics/lock-metrics-report.html
+        retention-days: 30
