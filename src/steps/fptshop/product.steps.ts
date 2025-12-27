@@ -3,7 +3,7 @@ import { expect } from '@playwright/test';
 import { CustomWorld } from '../../support/custom-world';
 import { HomePage } from '../../pages/HomePage';
 import { ProductDetailPage } from '../../pages/ProductDetailPage';
-import { retryInteraction } from '../../utils/retry';
+import { retryInteraction } from '../../utils/common/retry';
 
 /**
  * Click on product with retry for element interaction failures.

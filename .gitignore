@@ -20,11 +20,11 @@ allure-report-single/
 allure-report-test/
 .allure/
 
-# Diagnostics
-diagnostics/
+# Diagnostics output - only ignore root level
+/diagnostics/
 
-# Auth session storage (Lazy Login)
-auth/
+# Auth session storage (Lazy Login) - only ignore root level
+/auth/
 # Ignore root level reports but keep source files
 /*.json
 /*.html

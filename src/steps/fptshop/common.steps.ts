@@ -2,7 +2,7 @@ import { Given, Then } from '@cucumber/cucumber';
 import { CustomWorld } from '@support/custom-world';
 import { HomePage } from '@pages/HomePage';
 import { expect } from '@playwright/test';
-import { retryNavigation } from '../../utils/retry';
+import { retryNavigation } from '../../utils/common/retry';
 
 /**
  * Navigation step with built-in retry for network failures.

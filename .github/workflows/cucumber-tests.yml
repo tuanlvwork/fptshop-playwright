@@ -247,10 +247,10 @@ jobs:
     - name: Merge reports
       env:
         START_TIME: ${{ needs.setup.outputs.startTime }}
-      run: node scripts/merge-cucumber-reports.js
+      run: node scripts/reporting/merge-cucumber-reports.js
 
     - name: Capture Report Screenshot
-      run: node scripts/capture-report-screenshot.js
+      run: node scripts/reporting/capture-report-screenshot.js
 
     - name: Upload HTML report
       uses: actions/upload-artifact@v4
@@ -294,7 +294,7 @@ jobs:
     - name: Generate Allure Report
       run: |
         # Run the Node Script (handles: Shard merging, Categories, Report generation)
-        node scripts/generate-allure-report.js
+        node scripts/reporting/generate-allure-report.js
 
     - name: Upload Single-File Report
       uses: actions/upload-artifact@v4

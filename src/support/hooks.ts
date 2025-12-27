@@ -4,9 +4,9 @@ import { CustomWorld } from './custom-world';
 import config from '../config/config';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getDiagnostics, DiagnosticsService } from '../utils/diagnostics';
-import { generateAllureEnvironment, generateAllureExecutor } from '../utils/allure-helpers';
-import { LockMetricsCollector } from '../utils/lock-metrics';
+import { getDiagnostics, DiagnosticsService } from '../utils/diagnostics/diagnostics';
+import { generateAllureEnvironment, generateAllureExecutor } from '../utils/reporting/allure-helpers';
+import { LockMetricsCollector } from '../utils/auth/lock-metrics';
 import * as allure from 'allure-js-commons';
 
 setDefaultTimeout(config.defaultTimeout);
