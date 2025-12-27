@@ -1,7 +1,7 @@
 import { Page } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
-import { USERS } from '../../config/saucedemo/users';
+import { USERS } from '../../../config/saucedemo/users';
 
 export async function performLogin(page: Page, role: string, savePath: string) {
     const user = USERS[role as keyof typeof USERS];

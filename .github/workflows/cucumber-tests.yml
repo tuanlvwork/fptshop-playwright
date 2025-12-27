@@ -65,8 +65,77 @@ jobs:
           matrix="${matrix}]"
           echo "matrix=${matrix}" >> $GITHUB_OUTPUT
 
-  test:
+  validate:
+    name: Quick Validation
     needs: setup
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.57.0-noble
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: TypeScript compilation check
+      run: |
+        echo "🔍 Checking TypeScript compilation..."
+        npx tsc --noEmit
+        echo "✅ TypeScript compilation successful"
+
+    - name: Validate ALL test scenarios (dry-run)
+      run: |
+        echo "🔍 Validating ALL test scenarios and step definitions..."
+        echo "This checks syntax, imports, and step mappings without running tests"
+        npm run test:cucumber -- --dry-run --parallel 1
+      env:
+        CI: 'true'
+
+    - name: Run smoke tests (actual execution)
+      run: |
+        echo "🧪 Running quick smoke tests to validate execution..."
+        npm run test:cucumber -- --tags "@saucedemo and @smoke" --parallel 2
+      env:
+        CI: 'true'
+        ALLURE_OUTPUT_DIR: 'allure-results-validate'
+
+    - name: Validation summary
+      if: always()
+      run: |
+        echo "================================================"
+        echo "           VALIDATION SUMMARY"
+        echo "================================================"
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ All validations passed!"
+          echo "   - TypeScript compilation: OK"
+          echo "   - Scenario syntax (ALL tests): VALID"
+          echo "   - Smoke tests execution: PASSED"
+          echo ""
+          echo "✅ All test scenarios are valid and ready to run"
+          echo "Proceeding to full test suite..."
+        else
+          echo "❌ Validation failed!"
+          echo ""
+          echo "Common issues:"
+          echo "  - Missing step definitions"
+          echo "  - Syntax errors in feature files"
+          echo "  - TypeScript compilation errors"
+          echo "  - Runtime errors in smoke tests"
+          echo ""
+          echo "Please fix the issues before running full tests."
+          echo "This saves CI resources and provides faster feedback."
+        fi
+        echo "================================================"
+
+  test:
+    needs: [setup, validate]
     timeout-minutes: 60
     runs-on: ubuntu-latest
     container:
