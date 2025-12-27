@@ -4,11 +4,7 @@
   "description": "Automation testing for FPT Shop",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test:playwright",
-    "test:all": "npm run test:playwright && npm run test:cucumber",
-    "clean": "rm -rf test-results playwright-report blob-report cucumber-report all-cucumber-reports traces allure-results allure-report allure-report-single .allure diagnostics cucumber-report-*.html cucumber-report-*.json",
-    "test:playwright": "playwright test",
-    "report:playwright": "playwright show-report",
+    "test": "npm run test:cucumber",
     "test:cucumber": "node scripts/execution/run-cucumber.js",
     "test:cucumber:shard": "node scripts/execution/cucumber-shard.js",
     "report:cucumber": "node scripts/reporting/generate-cucumber-report.js",
