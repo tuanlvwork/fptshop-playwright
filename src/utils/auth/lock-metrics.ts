@@ -18,7 +18,7 @@ export interface LockMetrics {
  * Lock metrics collector and reporter
  */
 export class LockMetricsCollector {
-    private static metricsFile = path.join(process.cwd(), 'diagnostics', 'lock-metrics.json');
+    private static metricsFile = path.join(process.cwd(), 'diagnostics', `lock-metrics-${process.pid}.json`);
     private static metrics: LockMetrics[] = [];
 
     /**
@@ -32,6 +32,8 @@ export class LockMetricsCollector {
      * Save metrics to file
      */
     static async save(): Promise<void> {
+        // Always save if there are metrics, or if we want to validly produce a file.
+        // But to avoid spam, we only save if we have metrics.
         if (this.metrics.length === 0) return;
 
         const dir = path.dirname(this.metricsFile);
@@ -39,21 +41,10 @@ export class LockMetricsCollector {
             fs.mkdirSync(dir, { recursive: true });
         }
 
-        // Append to existing metrics if file exists
-        let existingMetrics: LockMetrics[] = [];
-        if (fs.existsSync(this.metricsFile)) {
-            try {
-                const content = fs.readFileSync(this.metricsFile, 'utf-8');
-                existingMetrics = JSON.parse(content);
-            } catch {
-                existingMetrics = [];
-            }
-        }
+        // Write directly to unique file
+        fs.writeFileSync(this.metricsFile, JSON.stringify(this.metrics, null, 2));
 
-        const allMetrics = [...existingMetrics, ...this.metrics];
-        fs.writeFileSync(this.metricsFile, JSON.stringify(allMetrics, null, 2));
-
-        console.log(`📊 Lock metrics saved: ${this.metrics.length} operations recorded`);
+        console.log(`📊 Lock metrics saved to ${path.basename(this.metricsFile)}: ${this.metrics.length} operations recorded`);
         this.metrics = []; // Clear after save
     }
 

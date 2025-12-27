@@ -16,21 +16,20 @@ runs:
         echo "Merging lock metrics from all shards..."
         mkdir -p diagnostics
         
-        # Merge all shard metrics into one file
-        echo "[" > diagnostics/lock-metrics.json
-        first=true
-        for shard_dir in lock-metrics-shards/lock-metrics-*; do
-          if [ -f "$shard_dir/lock-metrics.json" ]; then
-            if [ "$first" = true ]; then
-              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
-              first=false
-            else
-              echo "," >> diagnostics/lock-metrics.json
-              cat "$shard_dir/lock-metrics.json" | jq -c '.[]' >> diagnostics/lock-metrics.json
-            fi
-          fi
-        done
-        echo "]" >> diagnostics/lock-metrics.json
+        # Check if any metric files exist
+        if find lock-metrics-shards -name "lock-metrics-*.json" | grep -q .; then
+          echo "Found metric files, merging..."
+          # Merge all JSON arrays from all files into one
+          find lock-metrics-shards -name "lock-metrics-*.json" -exec cat {} + | jq -s 'add' > diagnostics/lock-metrics.json
+        else
+          echo "No lock metrics found."
+          echo "[]" > diagnostics/lock-metrics.json
+        fi
+
+        # Ensure valid JSON array
+        if [ ! -s diagnostics/lock-metrics.json ] || [ "$(cat diagnostics/lock-metrics.json)" = "null" ]; then
+           echo "[]" > diagnostics/lock-metrics.json
+        fi
         
         echo "Merged metrics count: $(jq 'length' diagnostics/lock-metrics.json)"
 
