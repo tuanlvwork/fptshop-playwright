@@ -1,10 +1,8 @@
 @saucedemo @sorting
 @allure.label.epic:Sauce_Demo
-@allure.label.feature:Product_Sorting
-@allure.label.story:Sorting
 @allure.label.severity:minor
 @allure.label.owner:QA_Team
-Feature: SauceDemo Product Sorting
+Feature: Product Sorting
   As a user of SauceDemo
   I want to sort products by different criteria
   So that I can find products more easily

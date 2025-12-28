@@ -9,6 +9,7 @@ import { generateAllureEnvironment, generateAllureExecutor } from '@utils/report
 import { LockMetricsCollector } from '@utils/auth/lock-metrics';
 import * as allure from 'allure-js-commons';
 
+
 setDefaultTimeout(config.defaultTimeout);
 
 let browser: Browser;
@@ -158,17 +159,6 @@ BeforeStep(async function (this: CustomWorld, { pickleStep }) {
 });
 
 AfterStep(async function (this: CustomWorld, { result, pickle, pickleStep }) {
-    // Strip verbose Playwright logs from the error message to keep Allure report clean
-    if (result.status === Status.FAILED && result.message) {
-        // Playwright puts "Call log:" and detailed timeouts in the message property.
-        // We trim it to keep the report group title clean.
-        const cleanMessage = result.message.split('Call log:')[0]
-            .split('Logs:')[0]
-            .trim();
-        // Force update the message so Allure uses the clean version for grouping
-        (result as any).message = cleanMessage;
-    }
-
     // End step timing
     const stepStatus = result.status === Status.FAILED ? 'failed' : 'passed';
     diagnostics.endStep(stepStatus, result.message);

@@ -1,10 +1,8 @@
 @saucedemo @checkout
 @allure.label.epic:Sauce_Demo
-@allure.label.feature:Checkout
-@allure.label.story:Checkout_Process
 @allure.label.severity:critical
 @allure.label.owner:QA_Team
-Feature: SauceDemo Checkout Process
+Feature: Checkout
   As a user of SauceDemo
   I want to complete the checkout process
   So that I can purchase my selected items

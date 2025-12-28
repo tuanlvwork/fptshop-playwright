@@ -1,11 +1,9 @@
 @fptshop
 @price
 @allure.label.epic:FPT_Shop
-@allure.label.feature:Product_Filtering
-@allure.label.story:Price_Filter
 @allure.label.severity:critical
 @allure.label.owner:QA_Team
-Feature: Price Filter
+Feature: Product Filtering
   As a user
   I want to filter phones by price range
   So that I can find phones within my budget

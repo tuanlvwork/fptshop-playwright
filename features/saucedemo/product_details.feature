@@ -1,10 +1,8 @@
 @saucedemo @product
 @allure.label.epic:Sauce_Demo
-@allure.label.feature:Product_Details
-@allure.label.story:View_Details
 @allure.label.severity:normal
 @allure.label.owner:QA_Team
-Feature: SauceDemo Product Details
+Feature: Product Details
   As a user of SauceDemo
   I want to view product details
   So that I can learn more about products before purchasing

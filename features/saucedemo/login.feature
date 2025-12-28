@@ -1,10 +1,8 @@
 @saucedemo @login
 @allure.label.epic:Sauce_Demo
-@allure.label.feature:Authentication
-@allure.label.story:Login
 @allure.label.severity:critical
 @allure.label.owner:QA_Team
-Feature: SauceDemo Login
+Feature: Authentication
   As a user of SauceDemo
   I want to login with different account types
   So that I can access the application based on my role

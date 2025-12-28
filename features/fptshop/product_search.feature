@@ -1,8 +1,6 @@
 @fptshop
 @search
 @allure.label.epic:FPT_Shop
-@allure.label.feature:Product_Search
-@allure.label.story:Search_by_Product_Name
 @allure.label.severity:blocker
 @allure.label.owner:QA_Team
 Feature: Product Search

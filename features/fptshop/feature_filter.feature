@@ -1,11 +1,9 @@
 @fptshop
 @feature_filter
 @allure.label.epic:FPT_Shop
-@allure.label.feature:Product_Filtering
-@allure.label.story:Feature_Filter
 @allure.label.severity:normal
 @allure.label.owner:QA_Team
-Feature: Feature Filter
+Feature: Product Filtering
   As a user
   I want to filter phones by technical specifications
   So that I can find a phone that meets my needs

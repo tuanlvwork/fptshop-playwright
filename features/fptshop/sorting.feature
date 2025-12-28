@@ -1,8 +1,6 @@
 @fptshop
 @sorting
 @allure.label.epic:FPT_Shop
-@allure.label.feature:Product_Sorting
-@allure.label.story:Sort_by_Criteria
 @allure.label.severity:normal
 @allure.label.owner:QA_Team
 Feature: Product Sorting

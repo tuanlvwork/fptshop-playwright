@@ -1,10 +1,8 @@
 @saucedemo @cart
 @allure.label.epic:Sauce_Demo
-@allure.label.feature:Cart
-@allure.label.story:Shopping_Cart
 @allure.label.severity:critical
 @allure.label.owner:QA_Team
-Feature: SauceDemo Shopping Cart
+Feature: Cart
   As a user of SauceDemo
   I want to add and remove items from my cart
   So that I can manage my purchases

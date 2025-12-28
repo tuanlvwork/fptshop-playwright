@@ -1,11 +1,9 @@
 @fptshop
 @combination
 @allure.label.epic:FPT_Shop
-@allure.label.feature:Product_Filtering
-@allure.label.story:Combination_Filter
 @allure.label.severity:normal
 @allure.label.owner:QA_Team
-Feature: Combination Filter
+Feature: Product Filtering
   As a user
   I want to filter by both brand and price
   So that I can narrow down my choices
