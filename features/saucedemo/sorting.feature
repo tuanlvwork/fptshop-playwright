@@ -1,4 +1,9 @@
 @saucedemo @sorting
+@allure.label.epic:Sauce_Demo
+@allure.label.feature:Product_Sorting
+@allure.label.story:Sorting
+@allure.label.severity:minor
+@allure.label.owner:QA_Team
 Feature: SauceDemo Product Sorting
   As a user of SauceDemo
   I want to sort products by different criteria
@@ -7,7 +12,7 @@ Feature: SauceDemo Product Sorting
   # ============================================
   # STANDARD USER - All Sorting Options
   # ============================================
-  @standard
+  @standard @story:SortProducts
   Scenario Outline: Standard user sorts products by <sort_option>
     Given I am logged in as "standard"
     When I sort products by "<sort_option>"

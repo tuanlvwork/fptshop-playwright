@@ -1,6 +1,6 @@
 @fptshop
 @search
-@allure.label.epic:E-commerce
+@allure.label.epic:FPT_Shop
 @allure.label.feature:Product_Search
 @allure.label.story:Search_by_Product_Name
 @allure.label.severity:blocker

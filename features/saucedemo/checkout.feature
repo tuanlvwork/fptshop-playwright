@@ -1,4 +1,9 @@
 @saucedemo @checkout
+@allure.label.epic:Sauce_Demo
+@allure.label.feature:Checkout
+@allure.label.story:Checkout_Process
+@allure.label.severity:critical
+@allure.label.owner:QA_Team
 Feature: SauceDemo Checkout Process
   As a user of SauceDemo
   I want to complete the checkout process
@@ -7,7 +12,7 @@ Feature: SauceDemo Checkout Process
   # ============================================
   # SUCCESSFUL CHECKOUT - Multiple Users
   # ============================================
-  @smoke @complete-checkout
+  @smoke @complete-checkout @story:HappyPathCheckout
   Scenario Outline: <user_type> user completes full checkout flow
     Given I am logged in as "<role>"
     When I add the first item to the cart
@@ -32,7 +37,7 @@ Feature: SauceDemo Checkout Process
   # ============================================
   # STANDARD USER - Checkout Workflow
   # ============================================
-  @standard @order-summary
+  @standard @order-summary @story:OrderValidation
   Scenario: Standard user sees order summary before completing
     Given I am logged in as "standard"
     When I add the first item to the cart
@@ -44,7 +49,7 @@ Feature: SauceDemo Checkout Process
     And I should see the tax
     And I should see the total price
 
-  @standard @cancel-checkout @cancel-at-info
+  @standard @cancel-checkout @cancel-at-info @story:CancelCheckout
   Scenario: Standard user cancels checkout at information step
     Given I am logged in as "standard"
     When I add the first item to the cart
@@ -53,7 +58,7 @@ Feature: SauceDemo Checkout Process
     And I cancel checkout
     Then I should be on the cart page
 
-  @standard @cancel-checkout @cancel-at-overview
+  @standard @cancel-checkout @cancel-at-overview @story:CancelCheckout
   Scenario: Standard user cancels checkout at overview step
     Given I am logged in as "standard"
     When I add the first item to the cart
@@ -67,7 +72,7 @@ Feature: SauceDemo Checkout Process
   # ============================================
   # CHECKOUT VALIDATION - Negative Scenarios
   # ============================================
-  @standard @negative @validation
+  @standard @negative @validation @story:CheckoutValidation
   Scenario Outline: Checkout fails with <validation_error>
     Given I am logged in as "standard"
     When I add the first item to the cart

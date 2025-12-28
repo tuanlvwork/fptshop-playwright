@@ -1,4 +1,9 @@
 @saucedemo @login
+@allure.label.epic:Sauce_Demo
+@allure.label.feature:Authentication
+@allure.label.story:Login
+@allure.label.severity:critical
+@allure.label.owner:QA_Team
 Feature: SauceDemo Login
   As a user of SauceDemo
   I want to login with different account types
@@ -10,7 +15,7 @@ Feature: SauceDemo Login
   # ============================================
   # SUCCESSFUL LOGIN - Multiple Users
   # ============================================
-  @smoke
+  @smoke @story:ValidLogin
   Scenario Outline: <user_type> user can login successfully
     When I login as "<role>"
     Then I should see the inventory page
@@ -44,7 +49,7 @@ Feature: SauceDemo Login
   # ============================================
   # FAILED LOGIN - Locked Out User
   # ============================================
-  @locked_out @negative
+  @locked_out @negative @story:LockedOutUser
   Scenario: Locked out user cannot login
     When I attempt to login as "locked_out"
     Then I should see the error message "Sorry, this user has been locked out"
@@ -52,7 +57,7 @@ Feature: SauceDemo Login
   # ============================================
   # FAILED LOGIN - Invalid Credentials
   # ============================================
-  @negative
+  @negative @story:InvalidLogin
   Scenario Outline: User cannot login with <scenario_name>
     When I attempt to login with username "<username>" and password "<password>"
     Then I should see the error message "<error_message>"

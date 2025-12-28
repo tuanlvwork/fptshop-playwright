@@ -219,13 +219,41 @@ try {
         execSync('npm install -g allure-commandline --save-dev', { stdio: 'inherit' });
     }
 
-    // 3. Copy categories.json
+    // 3. Process and Copy categories.json with Priority logic
     const categoriesSource = path.join(__dirname, '../../allure-categories.json');
     const categoriesDest = path.join(resultsDir, 'categories.json');
 
     if (fs.existsSync(categoriesSource)) {
-        console.log('📋 Copying categories definition');
-        fs.copyFileSync(categoriesSource, categoriesDest);
+        console.log('📋 Processing categories with strict priority (waterfall matching)...');
+        try {
+            const categories = JSON.parse(fs.readFileSync(categoriesSource, 'utf8'));
+            const finalCategories = [];
+            const exclusions = [];
+
+            categories.forEach(originalCat => {
+                const newCat = { ...originalCat };
+
+                if (newCat.messageRegex) {
+                    const originalRegex = newCat.messageRegex;
+
+                    // Apply negative lookahead for all higher-priority (previous) categories
+                    if (exclusions.length > 0) {
+                        const combinedExclusion = exclusions.map(e => `(?:${e})`).join('|');
+                        // Prepend lookahead. usage of ^ ensures it checks from start of string
+                        newCat.messageRegex = `^(?!${combinedExclusion})${originalRegex}`;
+                    }
+
+                    exclusions.push(originalRegex);
+                }
+                finalCategories.push(newCat);
+            });
+
+            fs.writeFileSync(categoriesDest, JSON.stringify(finalCategories, null, 2));
+            console.log(`   ✅ Processed ${finalCategories.length} categories.`);
+        } catch (err) {
+            console.error('   ⚠️ Error processing categories.json, falling back to simple copy:', err.message);
+            fs.copyFileSync(categoriesSource, categoriesDest);
+        }
     }
 
     // 4. Generate Standard Report (no history for now - debugging)

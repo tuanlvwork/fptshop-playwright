@@ -1,6 +1,6 @@
 @fptshop
 @detail
-@allure.label.epic:E-commerce
+@allure.label.epic:FPT_Shop
 @allure.label.feature:Product_Details
 @allure.label.story:View_Product_Details
 @allure.label.severity:critical

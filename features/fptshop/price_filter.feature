@@ -1,6 +1,6 @@
 @fptshop
 @price
-@allure.label.epic:E-commerce
+@allure.label.epic:FPT_Shop
 @allure.label.feature:Product_Filtering
 @allure.label.story:Price_Filter
 @allure.label.severity:critical

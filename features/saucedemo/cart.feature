@@ -1,4 +1,9 @@
 @saucedemo @cart
+@allure.label.epic:Sauce_Demo
+@allure.label.feature:Cart
+@allure.label.story:Shopping_Cart
+@allure.label.severity:critical
+@allure.label.owner:QA_Team
 Feature: SauceDemo Shopping Cart
   As a user of SauceDemo
   I want to add and remove items from my cart
@@ -7,7 +12,7 @@ Feature: SauceDemo Shopping Cart
   # ============================================
   # ADD SINGLE ITEM - All User Types
   # ============================================
-  @add-to-cart
+  @add-to-cart @story:AddToCart
   Scenario Outline: <user_type> user adds single item to cart
     Given I am logged in as "<role>"
     When I add the first item to the cart
@@ -41,14 +46,14 @@ Feature: SauceDemo Shopping Cart
   # ============================================
   # STANDARD USER - Advanced Cart Operations
   # ============================================
-  @standard @multiple-items
+  @standard @multiple-items @story:AddToCart
   Scenario: Standard user adds multiple items to cart
     Given I am logged in as "standard"
     When I add the first item to the cart
     And I add the second item to the cart
     Then the cart badge should show "2" items
 
-  @standard @remove-item
+  @standard @remove-item @story:RemoveFromCart
   Scenario: Standard user removes item from cart on inventory page
     Given I am logged in as "standard"
     When I add the first item to the cart
@@ -82,7 +87,7 @@ Feature: SauceDemo Shopping Cart
   # ============================================
   # MULTIPLE ITEMS - Parameterized
   # ============================================
-  @standard @bulk-add
+  @standard @bulk-add @story:BulkAdd
   Scenario Outline: Standard user adds <count> items to cart
     Given I am logged in as "standard"
     When I add <count> items to the cart

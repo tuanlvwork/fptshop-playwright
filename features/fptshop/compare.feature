@@ -1,6 +1,6 @@
 @fptshop
 @compare
-@allure.label.epic:E-commerce
+@allure.label.epic:FPT_Shop
 @allure.label.feature:Product_Comparison
 @allure.label.story:Compare_Products
 @allure.label.severity:normal

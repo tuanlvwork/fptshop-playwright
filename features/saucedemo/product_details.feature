@@ -1,4 +1,9 @@
 @saucedemo @product
+@allure.label.epic:Sauce_Demo
+@allure.label.feature:Product_Details
+@allure.label.story:View_Details
+@allure.label.severity:normal
+@allure.label.owner:QA_Team
 Feature: SauceDemo Product Details
   As a user of SauceDemo
   I want to view product details
@@ -7,7 +12,7 @@ Feature: SauceDemo Product Details
   # ============================================
   # VIEW PRODUCT DETAILS - Multiple Users
   # ============================================
-  @view-details
+  @view-details @story:ViewProduct
   Scenario Outline: <user_type> user views product detail page
     Given I am logged in as "<role>"
     When I click on the first product name

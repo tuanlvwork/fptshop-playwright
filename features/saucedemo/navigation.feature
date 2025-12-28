@@ -1,4 +1,9 @@
 @saucedemo @navigation
+@allure.label.epic:Sauce_Demo
+@allure.label.feature:Navigation
+@allure.label.story:Menu_Navigation
+@allure.label.severity:normal
+@allure.label.owner:QA_Team
 Feature: SauceDemo Navigation
   As a user of SauceDemo
   I want to navigate through the application
@@ -7,7 +12,7 @@ Feature: SauceDemo Navigation
   # ============================================
   # SIDEBAR MENU - Navigation Options
   # ============================================
-  @standard @menu
+  @standard @menu @story:Menu
   Scenario: Standard user opens sidebar menu
     Given I am logged in as "standard"
     When I open the sidebar menu

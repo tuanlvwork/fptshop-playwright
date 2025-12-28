@@ -8,9 +8,18 @@
         ]
     },
     {
-        "name": "⏱️ Timeout / Performance Issues",
-        "description": "Tests that failed due to timeout while waiting for elements, navigation, or network activity",
-        "messageRegex": ".*(Timeout|timed out|exceeded.*time|Navigation timeout|waiting for selector|test execution time exceeded).*",
+        "name": "🔍 Element Visibility/Interaction Issues",
+        "description": "Tests failed because elements were not visible, interactable, or were covered by other elements",
+        "messageRegex": ".*(not visible|hidden|obscured|overlapped|not interactable|pointer-events|element is not attached|waiting for element to be visible|Expected: visible).*",
+        "matchedStatuses": [
+            "broken",
+            "failed"
+        ]
+    },
+    {
+        "name": "🕵️ Locator/Selector Issues",
+        "description": "Tests failed because the specified element/selector could not be found in the DOM",
+        "messageRegex": ".*(waiting for locator|selector.*not found|no element found|element\\(s\\) not found|Node is detached|Target closed|Filter option.*not found|Sort option.*not found).*",
         "matchedStatuses": [
             "broken",
             "failed"
@@ -21,24 +30,6 @@
         "description": "Business logic expectations failed (e.g. text mismatch, value mismatch, specific expectation not met)",
         "messageRegex": ".*(expect\\(|Received:|Expected:|toBe|toEqual|toContain|toHaveText|toHaveAttribute|AssertionError).*",
         "matchedStatuses": [
-            "failed"
-        ]
-    },
-    {
-        "name": "🔍 Element Visibility/Interaction Issues",
-        "description": "Tests failed because elements were not visible, interactable, or were covered by other elements",
-        "messageRegex": ".*(not visible|hidden|obscured|overlapped|not interactable|pointer-events|element is not attached|waiting for element to be visible).*",
-        "matchedStatuses": [
-            "broken",
-            "failed"
-        ]
-    },
-    {
-        "name": "🕵️ Locator/Selector Issues",
-        "description": "Tests failed because the specified element/selector could not be found in the DOM",
-        "messageRegex": ".*(waiting for locator|selector.*not found|no element found|Node is detached|Target closed).*",
-        "matchedStatuses": [
-            "broken",
             "failed"
         ]
     },
@@ -75,6 +66,15 @@
         "messageRegex": ".*(browser.*launch|Session closed|connect ECONNREFUSED|Target page, context or browser has been closed).*",
         "matchedStatuses": [
             "broken"
+        ]
+    },
+    {
+        "name": "⏱️ Timeout / Performance Issues",
+        "description": "Tests that failed due to timeout while waiting for elements, navigation, or network activity",
+        "messageRegex": ".*(Timeout|timed out|exceeded.*time|Navigation timeout|waiting for selector|test execution time exceeded).*",
+        "matchedStatuses": [
+            "broken",
+            "failed"
         ]
     },
     {
