@@ -2,6 +2,7 @@ import { Given, When, Then } from '@cucumber/cucumber';
 import { CustomWorld } from '@support/custom-world';
 import { performLogin } from '@utils/auth/saucedemo/auth-helper';
 import { FileLock } from '@utils/auth/file-lock';
+import { LockMetricsCollector } from '@utils/auth/lock-metrics';
 import { USERS } from '@config/saucedemo/users';
 import config from '@config/config';
 import * as path from 'path';
@@ -138,6 +139,14 @@ Given('I am logged in as {string}', async function (this: CustomWorld, role: str
                 const inventoryList = this.page.locator('.inventory_list');
                 if (await inventoryList.count() > 0 && await inventoryList.isVisible()) {
                     verifySuccess = true;
+                    LockMetricsCollector.record({
+                        timestamp: new Date().toISOString(),
+                        pid: process.pid,
+                        role,
+                        operation: 'reuse',
+                        durationMs: 0,
+                        success: true
+                    });
                     console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Phase 1: Session reused successfully`);
                 }
             }
@@ -193,6 +202,14 @@ Given('I am logged in as {string}', async function (this: CustomWorld, role: str
                 if (this.page.url().includes('/inventory.html')) {
                     const inventoryList = this.page.locator('.inventory_list');
                     if (await inventoryList.count() > 0 && await inventoryList.isVisible()) {
+                        LockMetricsCollector.record({
+                            timestamp: new Date().toISOString(),
+                            pid: process.pid,
+                            role,
+                            operation: 'reuse',
+                            durationMs: 0,
+                            success: true
+                        });
                         console.log(`[${new Date().toISOString()}] [PID:${process.pid}] [${role}] ✅ Phase 2: Reused session created by another worker`);
                         return; // Success! Exit early
                     }

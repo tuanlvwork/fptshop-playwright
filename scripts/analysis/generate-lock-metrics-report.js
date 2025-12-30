@@ -21,13 +21,14 @@ const metrics = JSON.parse(fs.readFileSync(metricsFile, 'utf-8'));
 
 // Calculate statistics
 const acquires = metrics.filter(m => m.operation === 'acquire');
+const reuses = metrics.filter(m => m.operation === 'reuse');
 const releases = metrics.filter(m => m.operation === 'release');
 const failures = metrics.filter(m => !m.success);
 
 const byRole = {};
 metrics.forEach(m => {
     if (!byRole[m.role]) {
-        byRole[m.role] = { acquires: [], releases: [], failures: [] };
+        byRole[m.role] = { acquires: [], reuses: [], releases: [], failures: [] };
     }
     if (m.operation === 'acquire') {
         if (m.success) {
@@ -35,6 +36,8 @@ metrics.forEach(m => {
         } else {
             byRole[m.role].failures.push(m);
         }
+    } else if (m.operation === 'reuse') {
+        byRole[m.role].reuses.push(m);
     } else {
         byRole[m.role].releases.push(m);
     }
@@ -85,6 +88,7 @@ const roleStats = Object.entries(byRole).map(([role, ops]) => {
     return {
         role,
         acquires: ops.acquires.length,
+        reuses: ops.reuses.length,
         avgWait: roleAvg,
         maxWait: roleMax,
         minWait: roleMin,
@@ -322,6 +326,11 @@ const html = `
             </div>
             
             <div class="metric-card">
+                <div class="metric-label">Session Reuses</div>
+                <div class="metric-value" style="color: #10b981;">${reuses.length}</div>
+            </div>
+
+            <div class="metric-card">
                 <div class="metric-label">Failures</div>
                 <div class="metric-value" style="color: ${failures.length > 0 ? '#ef4444' : '#10b981'};">
                     ${failures.length}
@@ -344,6 +353,7 @@ const html = `
                 <thead>
                     <tr>
                         <th>Role</th>
+                        <th>Reuses</th>
                         <th>Acquires</th>
                         <th>Avg Wait</th>
                         <th>Max Wait</th>
@@ -355,6 +365,7 @@ const html = `
                     ${roleStats.map(r => `
                         <tr>
                             <td><strong>${r.role}</strong></td>
+                            <td style="font-weight: bold; color: #059669;">${r.reuses}</td>
                             <td>${r.acquires}</td>
                             <td>
                                 ${r.avgWait.toFixed(1)}ms

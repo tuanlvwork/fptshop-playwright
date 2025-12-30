@@ -8,7 +8,7 @@ export interface LockMetrics {
     timestamp: string;
     pid: number;
     role: string;
-    operation: 'acquire' | 'release' | 'wait';
+    operation: 'acquire' | 'release' | 'wait' | 'reuse';
     durationMs: number;
     success: boolean;
     error?: string;
@@ -53,24 +53,27 @@ export class LockMetricsCollector {
      */
     static getSummary(): {
         totalOperations: number;
-        byRole: Record<string, { acquires: number; avgWaitMs: number; maxWaitMs: number }>;
+        byRole: Record<string, { acquires: number; reuses: number; avgWaitMs: number; maxWaitMs: number }>;
         totalWaitTimeMs: number;
         avgWaitTimeMs: number;
     } {
-        const byRole: Record<string, { acquires: number; totalWaitMs: number; maxWaitMs: number }> = {};
+        const byRole: Record<string, { acquires: number; reuses: number; totalWaitMs: number; maxWaitMs: number }> = {};
         let totalWaitMs = 0;
         let totalAcquires = 0;
 
         this.metrics.forEach(metric => {
+            if (!byRole[metric.role]) {
+                byRole[metric.role] = { acquires: 0, reuses: 0, totalWaitMs: 0, maxWaitMs: 0 };
+            }
+
             if (metric.operation === 'acquire') {
-                if (!byRole[metric.role]) {
-                    byRole[metric.role] = { acquires: 0, totalWaitMs: 0, maxWaitMs: 0 };
-                }
                 byRole[metric.role].acquires++;
                 byRole[metric.role].totalWaitMs += metric.durationMs;
                 byRole[metric.role].maxWaitMs = Math.max(byRole[metric.role].maxWaitMs, metric.durationMs);
                 totalWaitMs += metric.durationMs;
                 totalAcquires++;
+            } else if (metric.operation === 'reuse') {
+                byRole[metric.role].reuses++;
             }
         });
 
@@ -84,7 +87,8 @@ export class LockMetricsCollector {
         Object.entries(byRole).forEach(([role, stats]) => {
             result.byRole[role] = {
                 acquires: stats.acquires,
-                avgWaitMs: stats.totalWaitMs / stats.acquires,
+                reuses: stats.reuses,
+                avgWaitMs: stats.acquires > 0 ? stats.totalWaitMs / stats.acquires : 0,
                 maxWaitMs: stats.maxWaitMs
             };
         });
@@ -110,8 +114,9 @@ export class LockMetricsCollector {
         Object.entries(summary.byRole).forEach(([role, stats]: [string, any]) => {
             console.log(`  ${role}:`);
             console.log(`    Acquisitions: ${stats.acquires}`);
-            console.log(`    Avg Wait: ${stats.avgWaitMs.toFixed(1)}ms`);
-            console.log(`    Max Wait: ${stats.maxWaitMs.toFixed(0)}ms`);
+            console.log(`    Reuses:       ${stats.reuses}`);
+            console.log(`    Avg Wait:     ${stats.avgWaitMs.toFixed(1)}ms`);
+            console.log(`    Max Wait:     ${stats.maxWaitMs.toFixed(0)}ms`);
         });
         console.log('');
     }

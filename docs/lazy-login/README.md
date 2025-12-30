@@ -113,13 +113,41 @@ Worker 1 (PID:101)                  Worker 2 (PID:102)
 
 We have a comprehensive monitoring system to track lock contention and session reuse.
 
-### Interactive Dashboard
-We generate a beautiful HTML dashboard in CI:
-*   **Visual Metrics**: Total operations, Avg wait time, Failures.
-*   **Performance Bars**: Visualize wait times per role.
-*   **Concurrent Attempts**: Highlight potential contention points.
+### � Lock Metrics Dashboard
 
-**Usage**:
+The dashboard visualizes the behavior of the file locking mechanism (`proper-lockfile`) which coordinates access to authentication files (e.g., `auth/standard_user.json`) across parallel test workers.
+
+The goal of this dashboard is to answer:
+- *Are my tests waiting too long to log in?*
+- *Is one user role becoming a bottleneck?*
+- *Are we seeing healthy contention or system failure?*
+
+#### Key Metrics Explained
+
+**1. Top Level Cards**
+
+*   **Total Operations**: The total number of interactions with the locking system (Acquire attempts + Releases).
+*   **Average Wait Time**: The average time a worker spent waiting in the queue to acquire a lock.
+    *   **Healthy**: < 500ms
+    *   **Warning**: 500ms - 2000ms
+    *   **Critical**: > 5000ms (Tests are sitting idle)
+*   **Max Wait Time**: The single longest wait time recorded. Useful for identifying "starvation" or outliers.
+*   **Lock Acquisitions**: The number of successful writes. This is often lower than total tests because valid sessions are reused (skip-login).
+*   **Session Reuses**: The number of times existing valid sessions were reused, avoiding login entirely. High is good!
+*   **Concurrent Attempts**: The total count of "retries". High number = High concurrency.
+
+**2. Performance by Role**
+
+This breakdown helps identify bottlenecks:
+
+| Metric | Meaning |
+| :--- | :--- |
+| **Reuses** | Number of times session was reused (skipped login). |
+| **Acquires** | Frequency of login writes per role. |
+| **Avg Wait** | Critical bottleneck indicator. If high for one role, consider adding more users. |
+| **Distribution** | Heatmap of wait times (<10ms is fast, >500ms is congested). |
+
+#### Usage
 ```bash
 # Generate HTML report
 npm run generate:lock-report
