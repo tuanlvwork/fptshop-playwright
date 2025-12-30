@@ -1,0 +1,8 @@
+name: 'Calculate Test Stats'
+description: 'Calculate total, passed and failed cases from merged report'
+runs:
+  using: "composite"
+  steps:
+    - name: Calculate Stats
+      shell: bash
+      run: node scripts/reporting/calculate-stats.js

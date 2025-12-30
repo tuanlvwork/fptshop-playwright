@@ -140,6 +140,22 @@ jobs:
         with:
           start-time: ${{ needs.setup.outputs.startTime }}
 
+  report-stats:
+    needs: [merge-reports]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download HTML report
+        uses: actions/download-artifact@v4
+        with:
+          name: cucumber-html-report
+          path: cucumber-report
+
+      - name: Calculate Stats
+        uses: ./.github/actions/calculate-stats
+
   allure-report:
     if: always()
     needs: [test]
